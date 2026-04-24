@@ -249,6 +249,42 @@ select option{background:var(--surface2);color:var(--text);padding:4px 8px}
 
 /* Small helpers */
 .hidden{display:none!important}
+
+/* Tab toggle button */
+.tab-toggle{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;transition:all .15s;letter-spacing:.3px}
+.tab-toggle:hover{border-color:var(--accent);color:var(--accent)}
+.tab-toggle.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* Tracking checkbox in props */
+.tracking-chip label{display:flex;align-items:center;gap:6px;cursor:pointer}
+.tracking-chip input[type=checkbox]{width:14px;height:14px;accent-color:var(--accent);cursor:pointer}
+
+/* Tracking panel */
+.tracking-panel{flex:1;display:none;flex-direction:column;overflow:hidden;background:var(--bg);padding:24px 32px}
+.tracking-panel:not(.hidden){display:flex}
+.tp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.tp-header h2{font-size:20px;font-weight:800;color:var(--text)}
+.tp-table-wrap{flex:1;overflow-y:auto}
+.tp-table{width:100%;border-collapse:collapse}
+.tp-table thead th{font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border2);position:sticky;top:0;background:var(--bg)}
+.tp-col-project{width:30%}
+.tp-col-check{width:14%;text-align:center!important}
+.tp-col-notes{width:34%}
+.tp-col-actions{width:8%}
+.tp-table tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
+.tp-table tbody tr:hover{background:var(--surface)}
+.tp-table td{padding:10px 12px;font-size:13px;color:var(--text);vertical-align:middle}
+.tp-table td.check-cell{text-align:center}
+.tp-table input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:pointer}
+.tp-table .tp-project{font-weight:700;color:var(--text)}
+.tp-table .tp-project.done{text-decoration:line-through;color:var(--text3)}
+.tp-table .tp-label{font-size:11px;color:var(--text2);cursor:pointer;user-select:none}
+.tp-table .tp-label.done{text-decoration:line-through;color:var(--text3)}
+.tp-table .tp-notes-input{width:100%;background:transparent;border:1px solid transparent;border-radius:6px;padding:4px 8px;color:var(--text2);font-family:'Syne',sans-serif;font-size:12px;outline:none;transition:border-color .15s}
+.tp-table .tp-notes-input:focus{border-color:var(--border2);background:var(--surface)}
+.tp-table .tp-delete{background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:4px 8px;border-radius:4px;transition:all .1s}
+.tp-table .tp-delete:hover{color:var(--failed);background:var(--surface2)}
+.tp-empty{text-align:center;padding:40px;color:var(--text3);font-size:13px}
 </style>
 </head>
 <body>
@@ -263,6 +299,7 @@ select option{background:var(--surface2);color:var(--text);padding:4px 8px}
   </div>
   <div class="topbar-right">
     <a class="sched-link" href="/" title="Open scheduler dashboard">← Scheduler</a>
+    <button class="tab-toggle" id="trackingTab" onclick="toggleTrackingView()">📋 Tracking</button>
     <button class="new-btn" onclick="newNote()">+ New Note</button>
   </div>
 </div>
@@ -301,6 +338,12 @@ select option{background:var(--surface2);color:var(--text);padding:4px 8px}
         <div class="prop-chip" id="topicChip">
           <span class="k">Topic</span>
           <select id="fTopic" onchange="onTopicSelectChange(this.value)"></select>
+        </div>
+        <div class="prop-chip tracking-chip" id="trackingChip">
+          <label class="track-label">
+            <input type="checkbox" id="fTracking" onchange="onTrackingToggle(this.checked)">
+            <span class="k">Tracking</span>
+          </label>
         </div>
         <!-- Guide-only fields -->
         <div class="prop-chip guide-only hidden" id="projChip">
@@ -390,6 +433,29 @@ select option{background:var(--surface2);color:var(--text);padding:4px 8px}
     </div>
   </section>
 
+  <!-- ─── TRACKING PANEL ─── -->
+  <section class="tracking-panel hidden" id="trackingPanel">
+    <div class="tp-header">
+      <h2>Project Tracking</h2>
+      <button class="new-btn" onclick="addTrackingRow()">+ Add Project</button>
+    </div>
+    <div class="tp-table-wrap">
+      <table class="tp-table">
+        <thead>
+          <tr>
+            <th class="tp-col-project">Project</th>
+            <th class="tp-col-check">Posted about</th>
+            <th class="tp-col-check">Interacted</th>
+            <th class="tp-col-notes">Quick notes</th>
+            <th class="tp-col-actions"></th>
+          </tr>
+        </thead>
+        <tbody id="trackingBody"></tbody>
+      </table>
+      <div class="tp-empty hidden" id="trackingEmpty">No projects tracked yet. Add one above or check "Tracking" on a note.</div>
+    </div>
+  </section>
+
 </div>
 
 <!-- ─── EMOJI PICKER ─── -->
@@ -456,6 +522,8 @@ select option{background:var(--surface2);color:var(--text);padding:4px 8px}
    STATE
    ═════════════════════════════════════════════════════════════════ */
 let topics = [], notes = [];
+let trackingRows = [];
+let trackingViewActive = false;
 let currentNoteId = null;
 let currentTopicFilter = null;  // null = show all
 let schedulerInfo = { reachable: false, timezone: null };
@@ -847,6 +915,7 @@ let emojiTargetId = null;
   bindGlobalHandlers();
   await loadTopics(/*seedIfEmpty*/true);
   await loadNotes();
+  await loadTracking();
   renderSidebar();
   checkScheduler();
 })();
@@ -1232,6 +1301,9 @@ function populateEditor(n) {
 
   // Auto-resize textareas to fit existing content
   setTimeout(autoResizeAll, 0);
+
+  // Tracking checkbox
+  document.getElementById('fTracking').checked = !!n.tracking_id;
 }
 
 function updateCategoryChip() {
@@ -1572,6 +1644,7 @@ async function publishNote() {
       n.sent_post_id = res.post && res.post.id;
     }
     toast('✓ Pushed to scheduler — set the date and account there', 'success');
+    await loadTracking();
     renderSidebar();
     populateEditor(n);
   } catch (e) {
@@ -1636,6 +1709,175 @@ window.addEventListener('beforeunload', () => {
     }
   }
 });
+
+/* ═════════════════════════════════════════════════════════════════
+   TRACKING
+   ═════════════════════════════════════════════════════════════════ */
+
+async function loadTracking() {
+  try {
+    trackingRows = await api('GET', '/api/tracking');
+  } catch (e) {
+    console.error('Failed to load tracking:', e);
+    trackingRows = [];
+  }
+}
+
+function toggleTrackingView() {
+  trackingViewActive = !trackingViewActive;
+  const btn     = document.getElementById('trackingTab');
+  const editor  = document.getElementById('editorWrap');
+  const panel   = document.getElementById('trackingPanel');
+  const sidebar = document.querySelector('.sidebar');
+
+  if (trackingViewActive) {
+    btn.classList.add('active');
+    editor.classList.add('hidden');
+    sidebar.classList.add('hidden');
+    panel.classList.remove('hidden');
+    renderTracking();
+  } else {
+    btn.classList.remove('active');
+    editor.classList.remove('hidden');
+    sidebar.classList.remove('hidden');
+    panel.classList.add('hidden');
+  }
+}
+
+function renderTracking() {
+  const tbody = document.getElementById('trackingBody');
+  const empty = document.getElementById('trackingEmpty');
+
+  if (trackingRows.length === 0) {
+    tbody.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  tbody.innerHTML = trackingRows.map(t => {
+    const postedClass = t.posted_about ? ' done' : '';
+    const interClass  = t.interacted   ? ' done' : '';
+    return `
+      <tr data-tid="${t.id}">
+        <td><span class="tp-project${postedClass && interClass ? ' done' : ''}">${escapeHtml(t.project || 'Untitled')}</span></td>
+        <td class="check-cell">
+          <label class="tp-label${postedClass}">
+            <input type="checkbox" ${t.posted_about ? 'checked' : ''} onchange="toggleTrackingCheck('${t.id}','posted_about',this.checked)">
+            Posted about
+          </label>
+        </td>
+        <td class="check-cell">
+          <label class="tp-label${interClass}">
+            <input type="checkbox" ${t.interacted ? 'checked' : ''} onchange="toggleTrackingCheck('${t.id}','interacted',this.checked)">
+            Interacted
+          </label>
+        </td>
+        <td>
+          <input class="tp-notes-input" value="${escapeHtml(t.quick_notes || '')}"
+                 placeholder="Quick notes…"
+                 oninput="debouncedTrackingUpdate('${t.id}','quick_notes',this.value)">
+        </td>
+        <td>
+          <button class="tp-delete" onclick="deleteTrackingRow('${t.id}')" title="Delete">✕</button>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+async function toggleTrackingCheck(tid, field, checked) {
+  const t = trackingRows.find(x => x.id === tid);
+  if (t) t[field] = checked;
+  renderTracking();
+  try {
+    await api('PUT', '/api/tracking/' + tid, { [field]: checked });
+  } catch (e) {
+    toast('Failed to update: ' + e.message, 'error');
+  }
+}
+
+let trackingUpdateTimers = {};
+function debouncedTrackingUpdate(tid, field, value) {
+  const t = trackingRows.find(x => x.id === tid);
+  if (t) t[field] = value;
+  clearTimeout(trackingUpdateTimers[tid]);
+  trackingUpdateTimers[tid] = setTimeout(async () => {
+    try {
+      await api('PUT', '/api/tracking/' + tid, { [field]: value });
+    } catch (e) {
+      toast('Failed to save: ' + e.message, 'error');
+    }
+  }, 600);
+}
+
+async function deleteTrackingRow(tid) {
+  if (!confirm('Delete this tracking row?')) return;
+  try {
+    await api('DELETE', '/api/tracking/' + tid);
+    trackingRows = trackingRows.filter(x => x.id !== tid);
+    // Unlink from any local note
+    for (const n of notes) {
+      if (n.tracking_id === tid) n.tracking_id = null;
+    }
+    if (currentNoteId) {
+      const cn = notes.find(x => x.id === currentNoteId);
+      if (cn) document.getElementById('fTracking').checked = !!cn.tracking_id;
+    }
+    renderTracking();
+  } catch (e) {
+    toast('Failed to delete: ' + e.message, 'error');
+  }
+}
+
+async function addTrackingRow() {
+  try {
+    const row = await api('POST', '/api/tracking', { project: 'New project' });
+    trackingRows.unshift(row);
+    renderTracking();
+    // Focus the project name for editing
+    const firstInput = document.querySelector('.tp-project');
+    if (firstInput) firstInput.focus();
+  } catch (e) {
+    toast('Failed to add: ' + e.message, 'error');
+  }
+}
+
+async function onTrackingToggle(checked) {
+  if (!currentNoteId) return;
+  const n = notes.find(x => x.id === currentNoteId);
+  if (!n) return;
+
+  if (checked) {
+    // Create a tracking row using the note's title
+    const title = (n.title && n.title.trim()) || 'Untitled';
+    try {
+      const row = await api('POST', '/api/tracking', {
+        project: title,
+        note_id: currentNoteId
+      });
+      trackingRows.unshift(row);
+      n.tracking_id = row.id;
+      onFieldChange('tracking_id', row.id);
+      if (saveTimer) { clearTimeout(saveTimer); await flushSave(); }
+      toast('Added to tracking', 'success');
+    } catch (e) {
+      document.getElementById('fTracking').checked = false;
+      toast('Failed: ' + e.message, 'error');
+    }
+  } else {
+    // Remove the linked tracking row
+    if (n.tracking_id) {
+      try {
+        await api('DELETE', '/api/tracking/' + n.tracking_id);
+        trackingRows = trackingRows.filter(x => x.id !== n.tracking_id);
+      } catch (e) { /* already deleted, fine */ }
+    }
+    n.tracking_id = null;
+    onFieldChange('tracking_id', null);
+    if (saveTimer) { clearTimeout(saveTimer); await flushSave(); }
+    toast('Removed from tracking', 'success');
+  }
+}
 </script>
 </body>
 </html>

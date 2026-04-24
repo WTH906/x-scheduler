@@ -19,7 +19,7 @@ bp  = Blueprint('notes', __name__)
 # Fields the client can set via PUT. `status` is server-controlled.
 NOTE_FIELDS = (
     'topic_id', 'title', 'text', 'reply_text', 'category', 'project',
-    'rating', 'stage', 'link', 'outcome', 'notes_internal',
+    'rating', 'stage', 'link', 'outcome', 'notes_internal', 'tracking_id',
 )
 
 
@@ -88,12 +88,12 @@ def api_create_note():
             '''INSERT INTO notes
                (id, topic_id, title, text, reply_text, category, project,
                 rating, stage, link, outcome, notes_internal, status,
-                created_at, updated_at)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+                tracking_id, created_at, updated_at)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)''',
             (nid, p['topic_id'], p['title'], p['text'], p['reply_text'],
              p['category'], p['project'], p['rating'], p['stage'],
              p['link'], p['outcome'], p['notes_internal'], p['status'],
-             ts, ts)
+             p.get('tracking_id'), ts, ts)
         )
         conn.commit()
         row = conn.execute("SELECT * FROM notes WHERE id=?", (nid,)).fetchone()
@@ -111,12 +111,12 @@ def api_update_note(nid):
         conn.execute(
             '''UPDATE notes SET topic_id=?, title=?, text=?, reply_text=?,
                category=?, project=?, rating=?, stage=?, link=?, outcome=?,
-               notes_internal=?, status=?, updated_at=?
+               notes_internal=?, status=?, tracking_id=?, updated_at=?
                WHERE id=?''',
             (p['topic_id'], p['title'], p['text'], p['reply_text'],
              p['category'], p['project'], p['rating'], p['stage'],
              p['link'], p['outcome'],
-             p['notes_internal'], p['status'], now_iso(), nid)
+             p['notes_internal'], p['status'], p.get('tracking_id'), now_iso(), nid)
         )
         conn.commit()
         row = conn.execute("SELECT * FROM notes WHERE id=?", (nid,)).fetchone()
@@ -240,6 +240,12 @@ def api_publish_note(nid):
             "UPDATE notes SET status='published', sent_post_id=?, updated_at=? WHERE id=?",
             (pid, now_iso(), nid)
         )
+        # Auto-check "posted about" in linked tracking row
+        if note.get('tracking_id'):
+            conn.execute(
+                "UPDATE tracking SET posted_about=TRUE, updated_at=? WHERE id=?",
+                (now_iso(), note['tracking_id'])
+            )
         conn.commit()
         post_row = conn.execute("SELECT * FROM posts WHERE id=?", (pid,)).fetchone()
 

@@ -45,6 +45,7 @@ from routes.posts    import bp as posts_bp
 from routes.guides   import bp as guides_bp
 from routes.topics   import bp as topics_bp
 from routes.notes    import bp as notes_bp
+from routes.tracking import bp as tracking_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(accounts_bp)
@@ -52,6 +53,7 @@ app.register_blueprint(posts_bp)
 app.register_blueprint(guides_bp)
 app.register_blueprint(topics_bp)
 app.register_blueprint(notes_bp)
+app.register_blueprint(tracking_bp)
 
 
 # ─── CRON ENDPOINT ──────────────────────────────────────────────────────────

@@ -152,12 +152,30 @@ def init_db():
                 notes_internal TEXT DEFAULT '',
                 status         TEXT DEFAULT 'draft',
                 sent_post_id   TEXT,
+                tracking_id    TEXT,
+                created_at     TEXT,
+                updated_at     TEXT
+            )''',
+            # ── Tracking table ──
+            '''CREATE TABLE IF NOT EXISTS tracking (
+                id             TEXT PRIMARY KEY,
+                project        TEXT NOT NULL DEFAULT '',
+                note_id        TEXT,
+                posted_about   BOOLEAN DEFAULT FALSE,
+                interacted     BOOLEAN DEFAULT FALSE,
+                quick_notes    TEXT DEFAULT '',
                 created_at     TEXT,
                 updated_at     TEXT
             )''',
         ]
         for stmt in statements:
             cur.execute(stmt)
+        # Migrate: add tracking_id to notes if upgrading
+        try:
+            cur.execute("SELECT tracking_id FROM notes LIMIT 1")
+        except Exception:
+            conn.rollback()
+            cur.execute("ALTER TABLE notes ADD COLUMN tracking_id TEXT")
         conn.commit()
         log.info("Database tables verified")
     except Exception:
