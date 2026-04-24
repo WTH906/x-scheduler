@@ -1,0 +1,1641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>X Notes</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0f;--surface:#12121a;--surface2:#1a1a26;--surface3:#22223a;
+  --border:#2a2a40;--border2:#3a3a55;
+  --accent:#7c6fff;--accent2:#a594ff;
+  --text:#e8e6ff;--text2:#9896b8;--text3:#5c5a7a;
+  --update:#4ade80;--article:#60a5fa;--thinking:#f472b6;--guide:#fb923c;
+  --early:#22c55e;--some-time:#f59e0b;--milking:#f97316;--tge-a:#818cf8;--tge-l:#f43f5e;
+  --posted:#4ade80;--failed:#f43f5e;--pending:#9896b8;
+  --sidebar-w:270px;
+  color-scheme: dark;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden}
+/* Force dark dropdowns globally */
+select,option{background:var(--surface2);color:var(--text)}
+select option{background:var(--surface2);color:var(--text);padding:4px 8px}
+
+/* ─── TOPBAR ─── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:48px;background:var(--surface);border-bottom:1px solid var(--border);position:relative;z-index:50;gap:12px}
+.topbar-logo{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:800;color:var(--accent2);white-space:nowrap}
+.topbar-logo svg{width:18px;height:18px;fill:var(--accent)}
+.topbar-logo .tag{font-size:9px;font-weight:700;color:var(--text3);background:var(--surface2);padding:2px 7px;border-radius:10px;letter-spacing:1px;text-transform:uppercase;margin-left:4px}
+.topbar-search{flex:1;max-width:380px;position:relative}
+.topbar-search input{width:100%;padding:7px 12px 7px 32px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Syne',sans-serif;font-size:12px;outline:none;transition:border-color .15s}
+.topbar-search input:focus{border-color:var(--accent)}
+.topbar-search::before{content:'';position:absolute;left:11px;top:50%;transform:translateY(-50%);width:12px;height:12px;background:no-repeat center/contain;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239896b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='7'/><path d='m21 21-4.3-4.3'/></svg>");opacity:.7}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.sched-link{display:flex;align-items:center;gap:6px;padding:5px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--text2);letter-spacing:.5px;text-decoration:none;transition:all .15s}
+.sched-link:hover{border-color:var(--accent);color:var(--accent)}
+.new-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-size:11px;font-weight:800;letter-spacing:.5px;cursor:pointer;transition:all .15s;text-transform:uppercase}
+.new-btn:hover{background:var(--accent2);transform:translateY(-1px)}
+
+/* ─── LAYOUT ─── */
+.app{display:flex;height:calc(100vh - 48px)}
+
+/* ─── SIDEBAR ─── */
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sb-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border)}
+.sb-title{font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px}
+.sb-add{width:24px;height:24px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1;transition:all .15s;padding:0}
+.sb-add:hover{border-color:var(--accent);color:var(--accent);background:var(--surface2)}
+
+.sb-tree{flex:1;overflow-y:auto;padding:6px 0 30px}
+.sb-tree::-webkit-scrollbar{width:6px}
+.sb-tree::-webkit-scrollbar-track{background:transparent}
+.sb-tree::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+.topic-row{display:flex;align-items:center;gap:4px;padding:5px 10px;cursor:pointer;user-select:none;color:var(--text);position:relative;transition:background .1s}
+.topic-row:hover{background:var(--surface2)}
+.topic-row.active{background:var(--surface2)}
+.topic-row .chev{width:14px;height:14px;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:10px;transition:transform .15s;flex-shrink:0}
+.topic-row.open .chev{transform:rotate(90deg)}
+.topic-row .icon{width:18px;height:18px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;background:var(--surface3)}
+.topic-row .name{flex:1;font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.topic-row .count{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;padding:1px 6px;background:var(--surface2);border-radius:10px;min-width:18px;text-align:center}
+.topic-row .menu-btn{opacity:0;width:18px;height:18px;border:none;background:transparent;color:var(--text3);cursor:pointer;border-radius:4px;font-size:14px;line-height:1;padding:0;margin-right:-4px}
+.topic-row:hover .menu-btn{opacity:1}
+.topic-row .menu-btn:hover{background:var(--surface3);color:var(--text)}
+
+.notes-group{padding:2px 0 4px}
+.note-row{display:flex;align-items:center;gap:8px;padding:5px 14px 5px 36px;cursor:pointer;font-size:11px;color:var(--text2);transition:all .1s;border-left:2px solid transparent}
+.note-row:hover{background:var(--surface2);color:var(--text)}
+.note-row.active{background:var(--surface3);color:var(--text);border-left-color:var(--accent)}
+.note-row .cat-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.note-row .title{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.note-row .flags{display:flex;gap:3px;flex-shrink:0;font-size:10px;opacity:.75}
+.note-row .untitled{font-style:italic;color:var(--text3)}
+
+.sb-empty{padding:30px 18px;text-align:center;color:var(--text3);font-size:11px;line-height:1.6}
+.sb-empty strong{color:var(--text2);display:block;margin-bottom:6px;font-size:12px}
+
+/* ─── EDITOR ─── */
+.editor-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.editor-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text3);gap:16px;padding:40px}
+.editor-empty h2{font-size:20px;font-weight:800;color:var(--text2);letter-spacing:.5px}
+.editor-empty p{font-size:13px;line-height:1.7;max-width:360px;text-align:center}
+.editor-empty button{padding:10px 22px;background:var(--accent);color:#fff;border:none;border-radius:9px;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;letter-spacing:.5px;cursor:pointer;text-transform:uppercase}
+.editor-empty button:hover{background:var(--accent2)}
+
+.editor{display:none;flex-direction:column;height:100%;overflow:hidden;min-height:0}
+.editor.show{display:flex}
+
+/* Properties bar */
+.props{padding:10px 24px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.prop-chip{display:flex;align-items:center;gap:6px;padding:5px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;font-size:11px;font-weight:700;color:var(--text2);cursor:pointer;transition:all .15s}
+.prop-chip:hover{border-color:var(--border2);color:var(--text)}
+.prop-chip .k{color:var(--text3);text-transform:uppercase;letter-spacing:.8px;font-size:9px}
+.prop-chip .v{color:var(--text)}
+.prop-chip select,.prop-chip input{background:transparent;border:none;color:var(--text);font-family:'Syne',sans-serif;font-size:11px;font-weight:700;outline:none;padding:0;cursor:pointer;min-width:60px}
+.prop-chip select option{background:var(--surface2);color:var(--text);font-weight:700;padding:4px 8px}
+.prop-chip input[type=text]{cursor:text}
+.prop-chip select{appearance:none;-webkit-appearance:none;padding-right:14px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6' fill='none' stroke='%239896b8' stroke-width='2'><path d='m1 1 4 4 4-4'/></svg>");background-repeat:no-repeat;background-position:right center;background-size:8px}
+.prop-chip.cat-update{border-color:var(--update)}
+.prop-chip.cat-update .v{color:var(--update)}
+.prop-chip.cat-article{border-color:var(--article)}
+.prop-chip.cat-article .v{color:var(--article)}
+.prop-chip.cat-thinking{border-color:var(--thinking)}
+.prop-chip.cat-thinking .v{color:var(--thinking)}
+.prop-chip.cat-guide{border-color:var(--guide)}
+.prop-chip.cat-guide .v{color:var(--guide)}
+
+/* Star rating */
+.star-prop{display:flex;gap:2px}
+.star-prop span{color:var(--text3);cursor:pointer;font-size:12px;line-height:1;transition:color .1s}
+.star-prop span.sel{color:#f59e0b}
+.star-prop span:hover{color:#fbbf24}
+
+/* Stage badge */
+.stage-prop.s-early{border-color:var(--early);color:var(--early)}
+.stage-prop.s-some-time{border-color:var(--some-time);color:var(--some-time)}
+.stage-prop.s-milking{border-color:var(--milking);color:var(--milking)}
+.stage-prop.s-tge-announced{border-color:var(--tge-a);color:var(--tge-a)}
+.stage-prop.s-tge-live{border-color:var(--tge-l);color:var(--tge-l)}
+
+/* Editor body */
+.ed-body{flex:1;overflow-y:auto;padding:22px 32px 120px;display:flex;flex-direction:column;gap:14px;max-width:820px;width:100%;margin:0 auto;min-height:0}
+.ed-body>*{flex-shrink:0}
+.ed-body::-webkit-scrollbar{width:8px}
+.ed-body::-webkit-scrollbar-track{background:transparent}
+.ed-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+.ed-title-input{width:100%;background:transparent;border:none;outline:none;font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--text);padding:4px 0 8px;border-bottom:1px solid transparent;transition:border-color .15s}
+.ed-title-input:focus{border-bottom-color:var(--border)}
+.ed-title-input::placeholder{color:var(--text3)}
+
+.ed-meta-line{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;letter-spacing:.5px;display:flex;align-items:center;gap:10px}
+.ed-meta-line .sent-badge{padding:2px 8px;background:#0f2e1a;color:var(--posted);border-radius:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase}
+
+.post-block-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;transition:border-color .15s}
+.post-block-wrap:focus-within{border-color:var(--border2)}
+.post-label{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1.2px}
+.post-label .thread-icon{color:var(--accent2)}
+.post-textarea{width:100%;min-height:200px;background:transparent;border:none;outline:none;padding:14px 16px;color:var(--text);font-family:'Syne',sans-serif;font-size:14px;line-height:1.6;resize:vertical;field-sizing:content}
+.post-textarea::placeholder{color:var(--text3)}
+.post-footer{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-top:1px solid var(--border);background:var(--surface2);gap:10px}
+.post-footer .tools{display:flex;gap:4px}
+.tool-btn{background:transparent;border:1px solid var(--border);color:var(--text2);padding:5px 10px;border-radius:6px;cursor:pointer;font-size:11px;font-family:'Syne',sans-serif;font-weight:700;display:flex;align-items:center;gap:5px;transition:all .15s}
+.tool-btn:hover{border-color:var(--accent);color:var(--accent)}
+.tool-btn.remove{border-color:transparent;color:var(--text3)}
+.tool-btn.remove:hover{color:var(--failed);border-color:var(--failed)}
+.char-count{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);font-weight:600}
+.char-count.warn{color:#f59e0b}
+.char-count.over{color:var(--failed)}
+
+.add-thread-btn{align-self:flex-start;background:transparent;border:1px dashed var(--border2);color:var(--text2);padding:9px 16px;border-radius:10px;cursor:pointer;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;display:flex;align-items:center;gap:8px;transition:all .15s;letter-spacing:.5px;text-transform:uppercase}
+.add-thread-btn:hover{border-color:var(--accent);color:var(--accent);border-style:solid}
+
+.internal-notes{margin-top:14px}
+.internal-notes-label{font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px;padding-left:2px}
+.internal-notes textarea{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text2);font-family:'Syne',sans-serif;font-size:12px;line-height:1.5;resize:vertical;min-height:60px;outline:none}
+.internal-notes textarea:focus{border-color:var(--border2);color:var(--text)}
+
+/* Action bar */
+.action-bar{position:sticky;bottom:0;display:flex;gap:8px;padding:14px 24px;background:linear-gradient(to top,var(--bg),transparent);border-top:0;justify-content:flex-end;flex-wrap:wrap}
+.act-btn{font-family:'Syne',sans-serif;padding:8px 16px;border-radius:9px;font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;cursor:pointer;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);transition:all .15s;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.act-btn:hover{border-color:var(--accent);color:var(--accent)}
+.act-btn.danger:hover{border-color:var(--failed);color:var(--failed)}
+.act-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.act-btn.primary:hover{background:var(--accent2);border-color:var(--accent2);color:#fff}
+.act-btn.ghost{background:transparent;border-color:var(--border)}
+.act-btn:disabled{opacity:.4;cursor:not-allowed}
+.action-spacer{flex:1}
+/* Draft / Published pill toggle */
+.status-toggle{position:relative;display:inline-flex;align-items:center;width:188px;height:34px;border-radius:18px;background:var(--surface2);border:1px solid var(--border2);cursor:pointer;user-select:none;transition:all .2s;overflow:hidden}
+.status-toggle:hover{border-color:var(--accent)}
+.status-toggle:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(124,111,255,.2)}
+.status-toggle .st-knob{position:absolute;top:3px;left:3px;width:90px;height:26px;border-radius:14px;background:var(--surface3);transition:all .25s cubic-bezier(.4,0,.2,1);box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.status-toggle[aria-checked="true"] .st-knob{left:95px;background:linear-gradient(135deg,var(--posted),#16a34a)}
+.status-toggle .st-label{position:relative;z-index:1;flex:1;text-align:center;font-family:'Syne',sans-serif;font-size:10px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--text3);transition:color .2s}
+.status-toggle[aria-checked="false"] .st-draft{color:var(--text)}
+.status-toggle[aria-checked="true"]  .st-pub{color:#fff}
+
+/* Status indicator floating */
+.save-status{position:absolute;bottom:14px;left:24px;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;letter-spacing:.5px;pointer-events:none;opacity:0;transition:opacity .2s}
+.save-status.show{opacity:1}
+
+/* ─── EMOJI PICKER ─── */
+.emoji-picker{position:absolute;z-index:500;width:340px;background:var(--surface2);border:1px solid var(--border2);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.6);display:none;overflow:hidden}
+.emoji-picker.open{display:block}
+.ep-tabs{display:flex;gap:2px;padding:6px;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto}
+.ep-tabs::-webkit-scrollbar{display:none}
+.ep-tab{background:transparent;border:none;color:var(--text3);cursor:pointer;padding:5px 9px;border-radius:6px;font-size:14px;flex-shrink:0;transition:background .1s}
+.ep-tab:hover{background:var(--surface2)}
+.ep-tab.active{background:var(--surface3)}
+.ep-search{padding:6px 8px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.ep-search input{width:100%;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Syne',sans-serif;font-size:11px;outline:none}
+.ep-search input:focus{border-color:var(--accent)}
+.ep-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;padding:8px;max-height:260px;overflow-y:auto}
+.ep-grid::-webkit-scrollbar{width:6px}
+.ep-grid::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.ep-btn{background:transparent;border:none;cursor:pointer;padding:4px;border-radius:6px;font-size:18px;line-height:1;transition:background .1s;width:36px;height:36px;display:flex;align-items:center;justify-content:center}
+.ep-btn:hover{background:var(--surface3)}
+.ep-note{padding:8px 12px;font-size:10px;color:var(--text3);border-top:1px solid var(--border);background:var(--surface);text-align:center;font-family:'DM Mono',monospace}
+
+/* ─── MODALS ─── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:400;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:20px}
+.overlay.open{display:flex}
+.modal{background:var(--surface2);border:1px solid var(--border2);border-radius:14px;padding:22px 24px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal h3{font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px;letter-spacing:.3px}
+.modal .sub{font-size:11px;color:var(--text3);margin-bottom:18px;line-height:1.5}
+.mrow{margin-bottom:12px}
+.mrow label{display:block;font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
+.mrow input,.mrow select,.mrow textarea{width:100%;padding:8px 11px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Syne',sans-serif;font-size:12px;outline:none}
+.mrow input:focus,.mrow select:focus,.mrow textarea:focus{border-color:var(--accent)}
+.mrow-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.color-picker-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.color-opt{width:22px;height:22px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:all .15s}
+.color-opt.sel{border-color:var(--text)}
+.randomize-hint{font-size:10px;color:var(--text3);margin-top:5px;font-style:italic}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+.modal-footer button{font-family:'Syne',sans-serif;padding:8px 16px;border-radius:8px;font-size:11px;font-weight:800;letter-spacing:.5px;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--text2);text-transform:uppercase;transition:all .15s}
+.modal-footer .primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.modal-footer .primary:hover{background:var(--accent2);border-color:var(--accent2)}
+.modal-footer .secondary:hover{border-color:var(--text);color:var(--text)}
+.modal-footer .danger:hover{border-color:var(--failed);color:var(--failed)}
+.modal-footer button:disabled{opacity:.4;cursor:not-allowed}
+
+.warn-box{background:#2a1f0d;border:1px solid #f59e0b;border-radius:8px;padding:10px 12px;font-size:11px;color:#fbbf24;line-height:1.5;margin-bottom:14px}
+.warn-box strong{color:#fbbf24}
+
+/* Context menu */
+.ctx{display:none;position:fixed;z-index:600;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:4px;min-width:160px;box-shadow:0 8px 24px rgba(0,0,0,.6)}
+.ctx.open{display:block}
+.ctx button{display:block;width:100%;padding:7px 12px;background:transparent;border:none;color:var(--text);font-family:'Syne',sans-serif;font-size:11px;font-weight:600;text-align:left;cursor:pointer;border-radius:5px;transition:background .1s}
+.ctx button:hover{background:var(--surface3)}
+.ctx button.danger{color:var(--failed)}
+.ctx button.danger:hover{background:#2a1014}
+.ctx .divider{height:1px;background:var(--border);margin:4px 0}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--surface3);border:1px solid var(--border2);color:var(--text);padding:10px 18px;border-radius:9px;font-size:12px;font-weight:700;z-index:1000;opacity:0;transition:all .25s;pointer-events:none;box-shadow:0 6px 20px rgba(0,0,0,.5)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.success{border-color:var(--posted);color:var(--posted)}
+.toast.error{border-color:var(--failed);color:var(--failed)}
+
+/* Scrollbar (general) */
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--border2)}
+
+/* Small helpers */
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">
+    <svg viewBox="0 0 24 24"><path d="M4 4h16v2H4zm0 4h10v2H4zm0 4h16v2H4zm0 4h7v2H4z"/></svg>
+    X Notes <span class="tag">Drafts</span>
+  </div>
+  <div class="topbar-search">
+    <input id="searchInput" placeholder="Search notes…" oninput="onSearch()">
+  </div>
+  <div class="topbar-right">
+    <a class="sched-link" href="/" title="Open scheduler dashboard">← Scheduler</a>
+    <button class="new-btn" onclick="newNote()">+ New Note</button>
+  </div>
+</div>
+
+<div class="app">
+
+  <!-- ─── SIDEBAR ─── -->
+  <aside class="sidebar">
+    <div class="sb-head">
+      <span class="sb-title">Topics</span>
+      <button class="sb-add" onclick="openTopicModal()" title="New topic">+</button>
+    </div>
+    <div class="sb-tree" id="sbTree"></div>
+  </aside>
+
+  <!-- ─── EDITOR ─── -->
+  <section class="editor-wrap" id="editorWrap">
+    <div class="editor-empty" id="editorEmpty">
+      <h2>No note selected</h2>
+      <p>Pick a note from the left, or start a new one. Your drafts are saved automatically.</p>
+      <button onclick="newNote()">+ New Note</button>
+    </div>
+
+    <div class="editor" id="editor">
+      <!-- Properties bar -->
+      <div class="props" id="propsBar">
+        <div class="prop-chip" id="catChip">
+          <span class="k">Category</span>
+          <select id="fCategory" onchange="onFieldChange('category',this.value);updateCategoryChip()">
+            <option value="update">Update</option>
+            <option value="article">Article</option>
+            <option value="thinking">Thinking</option>
+            <option value="guide">Guide</option>
+          </select>
+        </div>
+        <div class="prop-chip" id="topicChip">
+          <span class="k">Topic</span>
+          <select id="fTopic" onchange="onTopicSelectChange(this.value)"></select>
+        </div>
+        <!-- Guide-only fields -->
+        <div class="prop-chip guide-only hidden" id="projChip">
+          <span class="k">Project</span>
+          <input type="text" id="fProject" placeholder="e.g. LayerZero" oninput="onFieldChange('project',this.value)" style="width:110px">
+        </div>
+        <div class="prop-chip guide-only hidden" id="starChip" title="Rating">
+          <span class="k">Rating</span>
+          <div class="star-prop" id="starRow">
+            <span onclick="setStar(1)">★</span>
+            <span onclick="setStar(2)">★</span>
+            <span onclick="setStar(3)">★</span>
+            <span onclick="setStar(4)">★</span>
+            <span onclick="setStar(5)">★</span>
+          </div>
+        </div>
+        <div class="prop-chip stage-prop guide-only hidden" id="stageChip">
+          <span class="k">Stage</span>
+          <select id="fStage" onchange="onFieldChange('stage',this.value);updateStageChip()">
+            <option value="early">Early</option>
+            <option value="some-time">It's been some time</option>
+            <option value="milking">Milking</option>
+            <option value="tge-announced">TGE announced</option>
+            <option value="tge-live">TGE live</option>
+          </select>
+        </div>
+        <div class="prop-chip guide-only hidden" id="linkChip">
+          <span class="k">XLSX Link</span>
+          <input type="text" id="fLink" placeholder="https://…" oninput="onFieldChange('link',this.value)" style="width:120px">
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="ed-body">
+        <input class="ed-title-input" id="fTitle" placeholder="Untitled note" oninput="onFieldChange('title',this.value);updateSidebarTitle()">
+        <div class="ed-meta-line" id="metaLine"></div>
+
+        <!-- Main post -->
+        <div class="post-block-wrap">
+          <div class="post-label"><span>📝 Post</span><span id="postLabelMeta"></span></div>
+          <textarea class="post-textarea" id="fText" placeholder="What's on your mind?" oninput="onFieldChange('text',this.value);updateCharCount();autoResize(this)"></textarea>
+          <div class="post-footer">
+            <div class="tools">
+              <button class="tool-btn" onclick="openEmojiPicker('fText',event)">🙂 Emoji</button>
+              <button class="tool-btn" id="toggleThreadBtn" onclick="toggleThread()">🧵 Add reply</button>
+            </div>
+            <div class="char-count" id="charCount">0 / 280</div>
+          </div>
+        </div>
+
+        <!-- Thread reply -->
+        <div class="post-block-wrap hidden" id="replyWrap">
+          <div class="post-label"><span><span class="thread-icon">🧵</span> Thread Reply</span><span style="font-weight:600;color:var(--text3);font-size:9px">For external links — keeps main post algo-friendly</span></div>
+          <textarea class="post-textarea" id="fReplyText" placeholder="Reply to your own post… drop links here" oninput="onFieldChange('reply_text',this.value);updateReplyCount();autoResize(this)"></textarea>
+          <div class="post-footer">
+            <div class="tools">
+              <button class="tool-btn" onclick="openEmojiPicker('fReplyText',event)">🙂 Emoji</button>
+              <button class="tool-btn remove" onclick="removeThread()">✕ Remove reply</button>
+            </div>
+            <div class="char-count" id="replyCharCount">0 / 280</div>
+          </div>
+        </div>
+
+        <!-- Internal notes -->
+        <div class="internal-notes">
+          <div class="internal-notes-label">Internal notes (not posted)</div>
+          <textarea id="fInternalNotes" placeholder="Any notes just for you — sources, ideas, reminders…" oninput="onFieldChange('notes_internal',this.value);autoResize(this)"></textarea>
+        </div>
+
+        <!-- Actions -->
+        <div class="action-bar">
+          <button class="act-btn danger" onclick="deleteCurrentNote()">Delete</button>
+          <button class="act-btn" onclick="duplicateCurrentNote()">Duplicate</button>
+          <div class="action-spacer"></div>
+          <!-- Sync controls (visible only when status === 'published') -->
+          <a class="act-btn ghost hidden" id="openInSchedBtn" target="_blank" rel="noopener" title="Open the scheduler dashboard in a new tab">Open in scheduler ↗</a>
+          <button class="act-btn hidden" id="resyncBtn" onclick="resyncToScheduler()" title="Push local edits to the scheduler card">Re-sync ⟳</button>
+          <!-- Draft / Published pill toggle -->
+          <div class="status-toggle" id="statusToggle" role="switch" aria-checked="false" tabindex="0" onclick="togglePublish()" onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();togglePublish();}">
+            <div class="st-knob"></div>
+            <span class="st-label st-draft">Draft</span>
+            <span class="st-label st-pub">Published</span>
+          </div>
+        </div>
+      </div>
+      <div class="save-status" id="saveStatus"></div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ─── EMOJI PICKER ─── -->
+<div class="emoji-picker" id="emojiPicker">
+  <div class="ep-tabs" id="epTabs"></div>
+  <div class="ep-search"><input id="epSearch" placeholder="Search emoji (type a name)…" oninput="renderEmojiGrid()"></div>
+  <div class="ep-grid" id="epGrid"></div>
+  <div class="ep-note">X renders these natively with Twemoji — what you see is what you ship</div>
+</div>
+
+<!-- ─── TOPIC MODAL ─── -->
+<div class="overlay" id="topicOverlay">
+  <div class="modal">
+    <h3 id="topicModalTitle">New Topic</h3>
+    <div class="sub">Topics are the <strong>subject</strong> of your posts — e.g. DeFi, Vibecoding, a specific protocol. Not the same as Category (Update / Guide / …).</div>
+    <div class="mrow">
+      <label>Name</label>
+      <input type="text" id="tfName" placeholder="e.g. Vibecoding">
+    </div>
+    <div class="mrow-2">
+      <div class="mrow">
+        <label>Icon</label>
+        <select id="tfIcon" style="font-size:18px">
+          <option value="◆">◆</option>
+          <option value="✦">✦</option>
+          <option value="⚡">⚡</option>
+          <option value="★">★</option>
+          <option value="💡">💡</option>
+          <option value="🔥">🔥</option>
+          <option value="🚀">🚀</option>
+          <option value="💎">💎</option>
+          <option value="🎯">🎯</option>
+          <option value="📊">📊</option>
+          <option value="🧪">🧪</option>
+          <option value="⚙️">⚙️</option>
+          <option value="🔗">🔗</option>
+          <option value="📝">📝</option>
+          <option value="🌐">🌐</option>
+          <option value="🏗️">🏗️</option>
+          <option value="💰">💰</option>
+        </select>
+      </div>
+      <div class="mrow">
+        <label>Color</label>
+        <div class="color-picker-row" id="colorRow"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="danger hidden" id="topicDeleteBtn" onclick="deleteTopic()">Delete Topic</button>
+      <button class="secondary" onclick="closeTopicModal()">Cancel</button>
+      <button class="primary" onclick="saveTopic()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Context menu for topics -->
+<div class="ctx" id="ctxMenu"></div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═════════════════════════════════════════════════════════════════
+   STATE
+   ═════════════════════════════════════════════════════════════════ */
+let topics = [], notes = [];
+let currentNoteId = null;
+let currentTopicFilter = null;  // null = show all
+let schedulerInfo = { reachable: false, timezone: null };
+let schedulerAccounts = [];
+let editingTopicId = null;
+let saveTimer = null;
+
+const CATEGORY_LABELS = {
+  update:   'Update',
+  article:  'Article',
+  thinking: 'Thinking',
+  guide:    'Guide',
+};
+const CATEGORY_COLORS = {
+  update:   '#4ade80',
+  article:  '#60a5fa',
+  thinking: '#f472b6',
+  guide:    '#fb923c',
+};
+const STAGE_LABELS = {
+  'early':         'Early',
+  'some-time':     "It's been some time",
+  'milking':       'Milking',
+  'tge-announced': 'TGE announced',
+  'tge-live':      'TGE live',
+};
+const TOPIC_COLOR_PALETTE = [
+  '#7c6fff','#a594ff','#60a5fa','#4ade80','#fb923c','#f472b6',
+  '#f59e0b','#34d399','#e879f9','#2dd4bf','#f87171','#818cf8',
+];
+
+/* ═════════════════════════════════════════════════════════════════
+   API
+   ═════════════════════════════════════════════════════════════════ */
+async function api(method, url, body) {
+  const opts = { method, headers: {'Content-Type':'application/json'} };
+  if (body !== undefined) opts.body = JSON.stringify(body);
+  const r = await fetch(url, opts);
+  if (!r.ok) {
+    let detail = r.statusText;
+    try { detail = (await r.json()).error || detail; } catch(e){}
+    throw new Error(detail);
+  }
+  return r.json();
+}
+
+/* ═════════════════════════════════════════════════════════════════
+   TOAST
+   ═════════════════════════════════════════════════════════════════ */
+let toastTimer;
+function toast(msg, kind='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + kind;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.className = 'toast', 2800);
+}
+
+/* ═════════════════════════════════════════════════════════════════
+   EMOJI DATA — curated, searchable, X-compatible (standard Unicode)
+   ═════════════════════════════════════════════════════════════════ */
+const EMOJI_CATEGORIES = [
+  { id:'smileys',  icon:'😀', label:'Smileys' },
+  { id:'people',   icon:'👋', label:'Gestures' },
+  { id:'nature',   icon:'🐶', label:'Nature' },
+  { id:'food',     icon:'🍔', label:'Food' },
+  { id:'activity', icon:'⚽', label:'Activity' },
+  { id:'travel',   icon:'🌍', label:'Travel' },
+  { id:'objects',  icon:'💡', label:'Objects' },
+  { id:'symbols',  icon:'❤️', label:'Symbols' },
+];
+// Each entry: [emoji, name-keywords]
+const EMOJIS = {
+  smileys: [
+    ['😀','grinning happy'],['😃','grinning smile'],['😄','grinning'],['😁','beaming grin'],
+    ['😆','laughing'],['😅','sweat smile'],['🤣','rofl rolling floor'],['😂','joy tears laugh'],
+    ['🙂','slight smile'],['🙃','upside down'],['😉','wink'],['😊','blush smile'],
+    ['😇','angel halo'],['🥰','love smile'],['😍','heart eyes love'],['🤩','star struck'],
+    ['😘','kiss blow'],['😗','kiss'],['😚','closed eyes kiss'],['😙','smiling kiss'],
+    ['🥲','smile tear'],['😋','yum savoring'],['😛','tongue'],['😜','wink tongue'],
+    ['🤪','zany crazy'],['😝','squint tongue'],['🤑','money mouth'],['🤗','hug'],
+    ['🤭','hand over mouth oops'],['🤫','shh quiet'],['🤔','thinking'],['🤐','zipper mouth'],
+    ['🤨','raised eyebrow skeptical'],['😐','neutral'],['😑','expressionless'],['😶','no mouth'],
+    ['😶‍🌫️','in clouds foggy'],['😏','smirk'],['😒','unamused'],['🙄','eye roll'],
+    ['😬','grimace'],['😮‍💨','exhale'],['🤥','lying'],['😌','relieved'],
+    ['😔','pensive sad'],['😪','sleepy'],['🤤','drool'],['😴','sleeping'],
+    ['😷','mask sick'],['🤒','thermometer fever'],['🤕','bandage'],['🤢','nauseated'],
+    ['🤮','vomit sick'],['🤧','sneeze'],['🥵','hot heat'],['🥶','cold freezing'],
+    ['🥴','woozy'],['😵','dizzy ko'],['😵‍💫','spinning head'],['🤯','mind blown exploding'],
+    ['🤠','cowboy'],['🥳','party'],['🥸','disguise'],['😎','cool sunglasses'],
+    ['🤓','nerd glasses'],['🧐','monocle inspect'],['😕','confused'],['😟','worried'],
+    ['🙁','frown'],['☹️','frowning'],['😮','surprised open mouth'],['😯','hushed'],
+    ['😲','astonished'],['😳','flushed'],['🥺','pleading'],['😦','frowning open'],
+    ['😧','anguished'],['😨','fearful'],['😰','anxious sweat'],['😥','sad relieved'],
+    ['😢','cry'],['😭','loudly crying sob'],['😱','scream'],['😖','confounded'],
+    ['😣','persevering'],['😞','disappointed'],['😓','downcast sweat'],['😩','weary'],
+    ['😫','tired'],['🥱','yawn'],['😤','huff proud'],['😡','angry rage'],
+    ['😠','angry'],['🤬','cursing symbols'],['😈','devil smile'],['👿','angry devil'],
+    ['💀','skull dead'],['☠️','skull crossbones'],['💩','poop'],['🤡','clown'],
+    ['👹','ogre'],['👺','goblin'],['👻','ghost boo'],['👽','alien'],['👾','monster invader'],
+    ['🤖','robot'],['😺','cat grin'],['😸','cat smile'],['😹','cat joy'],['😻','cat heart eyes'],
+    ['😼','cat smirk'],['😽','cat kiss'],['🙀','cat scream'],['😿','cat crying'],['😾','cat pout'],
+  ],
+  people: [
+    ['👋','wave hello bye'],['🤚','raised back hand'],['🖐️','hand fingers splayed'],
+    ['✋','raised hand stop'],['🖖','vulcan spock'],['👌','ok perfect'],
+    ['🤌','pinched fingers italian'],['🤏','pinching small'],['✌️','victory peace'],
+    ['🤞','fingers crossed hope'],['🫰','finger snap money'],['🤟','love you rock'],
+    ['🤘','rock on horns'],['🤙','call me shaka'],['👈','point left'],['👉','point right'],
+    ['👆','point up'],['🖕','middle finger'],['👇','point down'],['☝️','index up one'],
+    ['🫵','point at you'],['👍','thumbs up yes like'],['👎','thumbs down no dislike'],
+    ['✊','fist raised power'],['👊','punch fist bump'],['🤛','left fist'],['🤜','right fist'],
+    ['👏','clap applause'],['🙌','raised hands celebrate praise'],['👐','open hands'],
+    ['🤲','palms up together'],['🤝','handshake deal'],['🙏','pray thanks please'],
+    ['✍️','writing hand'],['💅','nail polish flawless'],['🤳','selfie'],['💪','muscle flex strong'],
+    ['🦾','mechanical arm'],['🦿','mechanical leg'],['🦵','leg'],['🦶','foot'],
+    ['👂','ear'],['🦻','hearing aid'],['👃','nose'],['🧠','brain'],['🫀','heart anatomical'],
+    ['🫁','lungs'],['🦷','tooth'],['🦴','bone'],['👀','eyes watching'],['👁️','eye'],
+    ['👅','tongue out'],['👄','mouth lips'],['🫦','biting lip'],
+    ['👶','baby'],['🧒','child'],['👦','boy'],['👧','girl'],['🧑','person'],
+    ['👨','man'],['👩','woman'],['🧓','older'],['👴','old man'],['👵','old woman'],
+    ['🙍','frowning person'],['🙎','pouting person'],['🙅','no person cross'],['🙆','ok person'],
+    ['💁','tipping hand info'],['🙋','raising hand'],['🧏','deaf'],['🙇','bowing apologize'],
+    ['🤦','facepalm'],['🤷','shrug dunno'],
+    ['👮','police'],['🕵️','detective spy'],['💂','guard'],['👷','construction worker builder'],
+    ['🫅','royalty crown'],['🤴','prince'],['👸','princess'],['👳','turban'],['🧕','hijab'],
+    ['🧔','bearded'],['👱','blond'],
+    ['👰','bride'],['🤵','tuxedo groom'],['🤰','pregnant'],['🤱','breastfeeding'],
+    ['👼','baby angel'],['🎅','santa'],['🤶','mrs claus'],['🦸','superhero'],['🦹','supervillain'],
+    ['🧙','mage wizard'],['🧚','fairy'],['🧛','vampire'],['🧜','merperson'],['🧝','elf'],
+    ['🧞','genie'],['🧟','zombie'],
+  ],
+  nature: [
+    ['🐶','dog puppy'],['🐱','cat kitten'],['🐭','mouse'],['🐹','hamster'],['🐰','rabbit bunny'],
+    ['🦊','fox'],['🐻','bear'],['🐼','panda'],['🐻‍❄️','polar bear'],['🐨','koala'],
+    ['🐯','tiger'],['🦁','lion'],['🐮','cow'],['🐷','pig'],['🐽','pig nose'],
+    ['🐸','frog'],['🐵','monkey'],['🙈','see no evil'],['🙉','hear no evil'],['🙊','speak no evil'],
+    ['🐒','monkey'],['🐔','chicken'],['🐧','penguin'],['🐦','bird'],['🐤','chick'],
+    ['🐣','hatching'],['🐥','baby chick'],['🦆','duck'],['🦅','eagle'],['🦉','owl'],
+    ['🦇','bat'],['🐺','wolf'],['🐗','boar'],['🐴','horse'],['🦄','unicorn'],
+    ['🐝','bee'],['🪱','worm'],['🐛','bug'],['🦋','butterfly'],['🐌','snail'],
+    ['🐞','ladybug'],['🐜','ant'],['🪰','fly'],['🪲','beetle'],['🦂','scorpion'],
+    ['🕷️','spider'],['🕸️','web'],['🐢','turtle'],['🐍','snake'],['🦎','lizard'],
+    ['🦖','trex dino'],['🦕','sauropod dino'],['🐙','octopus'],['🦑','squid'],['🦐','shrimp'],
+    ['🦞','lobster'],['🦀','crab'],['🐡','pufferfish'],['🐠','tropical fish'],['🐟','fish'],
+    ['🐬','dolphin'],['🐳','whale'],['🐋','whale'],['🦈','shark'],
+    ['🐊','croc'],['🐅','tiger'],['🐆','leopard'],['🦓','zebra'],['🦍','gorilla'],
+    ['🦧','orangutan'],['🐘','elephant'],['🦛','hippo'],['🦏','rhino'],['🐪','camel'],
+    ['🐫','camel 2hump'],['🦙','llama'],['🦒','giraffe'],['🐃','buffalo'],['🐂','ox'],
+    ['🐄','cow face'],['🐎','horse'],['🐖','pig'],['🐏','ram'],['🐑','sheep'],
+    ['🐐','goat'],['🦌','deer'],['🐕','dog'],['🐩','poodle'],['🦮','guide dog'],
+    ['🐕‍🦺','service dog'],['🐈','cat'],['🐈‍⬛','black cat'],['🦃','turkey'],['🦚','peacock'],
+    ['🦜','parrot'],['🦢','swan'],['🦩','flamingo'],['🕊️','dove peace'],['🐇','rabbit'],
+    ['🦝','raccoon'],['🦨','skunk'],['🦡','badger'],['🦦','otter'],['🦥','sloth'],
+    ['🐿️','chipmunk'],['🌵','cactus'],['🎄','xmas tree'],['🌲','evergreen'],['🌳','tree'],
+    ['🌴','palm'],['🪵','wood log'],['🌱','seedling'],['🌿','herb'],['☘️','shamrock'],
+    ['🍀','clover luck'],['🎍','bamboo'],['🪴','potted plant'],['🎋','bamboo'],['🍃','leaves'],
+    ['🍂','fallen leaves'],['🍁','maple'],['🍄','mushroom'],['🐚','shell'],['🪨','rock'],
+    ['🌾','wheat'],['💐','bouquet'],['🌷','tulip'],['🌹','rose'],['🥀','wilted flower'],
+    ['🌺','hibiscus'],['🌸','cherry blossom'],['🌼','blossom'],['🌻','sunflower'],
+    ['🌞','sun face'],['🌝','full moon face'],['🌛','first quarter moon'],['🌜','last quarter moon'],
+    ['🌚','new moon face'],['🌕','full moon'],['🌖','waning gibbous'],['🌗','last quarter'],
+    ['🌘','waning crescent'],['🌑','new moon'],['🌒','waxing crescent'],['🌓','first quarter'],
+    ['🌔','waxing gibbous'],['🌙','crescent moon'],['🌎','earth americas'],['🌍','earth africa'],
+    ['🌏','earth asia'],['🪐','ringed planet'],['💫','dizzy star swirl'],['⭐','star'],
+    ['🌟','glowing star'],['✨','sparkles'],['⚡','lightning bolt fast zap'],['☄️','comet'],
+    ['💥','boom collision'],['🔥','fire hot flame lit'],['🌈','rainbow'],['☀️','sun'],
+    ['🌤️','sun behind cloud'],['⛅','sun cloud'],['🌥️','sun behind large cloud'],['☁️','cloud'],
+    ['🌦️','sun behind rain'],['🌧️','rain'],['⛈️','thunderstorm'],['🌩️','lightning cloud'],
+    ['🌨️','snow cloud'],['❄️','snowflake cold'],['☃️','snowman'],['⛄','snowman no snow'],
+    ['🌬️','wind face'],['💨','dash wind fast'],['💧','droplet water'],['💦','sweat drops'],
+    ['🌊','wave ocean liquidity'],
+  ],
+  food: [
+    ['🍏','green apple'],['🍎','red apple'],['🍐','pear'],['🍊','orange tangerine'],
+    ['🍋','lemon'],['🍌','banana'],['🍉','watermelon'],['🍇','grapes'],
+    ['🍓','strawberry'],['🫐','blueberries'],['🍈','melon'],['🍒','cherries'],
+    ['🍑','peach'],['🥭','mango'],['🍍','pineapple'],['🥥','coconut'],
+    ['🥝','kiwi'],['🍅','tomato'],['🍆','eggplant'],['🥑','avocado'],
+    ['🥦','broccoli'],['🥬','leafy greens'],['🥒','cucumber'],['🌶️','hot pepper spicy'],
+    ['🫑','bell pepper'],['🌽','corn'],['🥕','carrot'],['🫒','olive'],
+    ['🧄','garlic'],['🧅','onion'],['🥔','potato'],['🍠','sweet potato'],
+    ['🥐','croissant'],['🥯','bagel'],['🍞','bread'],['🥖','baguette'],
+    ['🫓','flatbread'],['🥨','pretzel'],['🧀','cheese'],['🥚','egg'],
+    ['🍳','cooking egg'],['🧈','butter'],['🥞','pancakes'],['🧇','waffle'],
+    ['🥓','bacon'],['🥩','steak meat'],['🍗','poultry leg'],['🍖','meat bone'],
+    ['🦴','bone'],['🌭','hot dog'],['🍔','burger'],['🍟','fries'],
+    ['🍕','pizza'],['🥪','sandwich'],['🥙','stuffed flatbread'],['🧆','falafel'],
+    ['🌮','taco'],['🌯','burrito'],['🫔','tamale'],['🥗','salad'],
+    ['🥘','paella pan'],['🫕','fondue'],['🥫','canned food'],['🍝','spaghetti pasta'],
+    ['🍜','noodles ramen'],['🍲','pot of food stew'],['🍛','curry'],['🍣','sushi'],
+    ['🍱','bento'],['🥟','dumpling'],['🦪','oyster'],['🍤','fried shrimp'],
+    ['🍙','rice ball'],['🍚','rice'],['🍘','rice cracker'],['🥠','fortune cookie'],
+    ['🥮','mooncake'],['🍢','oden'],['🍡','dango'],['🍧','shaved ice'],
+    ['🍨','ice cream'],['🍦','soft serve'],['🥧','pie'],['🧁','cupcake'],
+    ['🍰','shortcake slice'],['🎂','birthday cake'],['🍮','custard'],['🍭','lollipop'],
+    ['🍬','candy'],['🍫','chocolate'],['🍿','popcorn'],['🍩','donut'],
+    ['🍪','cookie'],['🌰','chestnut'],['🥜','peanuts'],['🍯','honey'],
+    ['🥛','milk'],['🍼','baby bottle'],['☕','coffee'],['🍵','tea'],
+    ['🧃','juice box'],['🥤','cup straw'],['🧋','bubble tea'],['🍶','sake'],
+    ['🍺','beer'],['🍻','clinking beers cheers'],['🥂','clinking glasses champagne'],['🍷','wine'],
+    ['🥃','whiskey tumbler'],['🍸','cocktail'],['🍹','tropical drink'],['🧉','mate'],
+    ['🍾','champagne bottle pop'],['🧊','ice cube'],['🥄','spoon'],['🍴','fork knife'],
+    ['🍽️','plate'],['🥣','bowl'],['🥡','takeout box'],['🥢','chopsticks'],
+  ],
+  activity: [
+    ['⚽','soccer football'],['🏀','basketball'],['🏈','american football'],['⚾','baseball'],
+    ['🥎','softball'],['🎾','tennis'],['🏐','volleyball'],['🏉','rugby'],
+    ['🥏','frisbee'],['🎱','8 ball'],['🪀','yoyo'],['🏓','ping pong'],
+    ['🏸','badminton'],['🏒','hockey'],['🏑','field hockey'],['🥍','lacrosse'],
+    ['🏏','cricket'],['🪃','boomerang'],['🥅','goal net'],['⛳','flag hole golf'],
+    ['🪁','kite'],['🏹','bow arrow'],['🎣','fishing pole'],['🤿','diving mask'],
+    ['🥊','boxing'],['🥋','martial arts uniform'],['🎽','running shirt'],['🛹','skateboard'],
+    ['🛼','roller skate'],['🛷','sled'],['⛸️','ice skate'],['🥌','curling'],
+    ['🎿','skis'],['⛷️','skier'],['🏂','snowboarder'],['🪂','parachute'],
+    ['🏋️','weightlifter'],['🤼','wrestlers'],['🤸','cartwheel'],['⛹️','person bouncing ball'],
+    ['🤺','fencer'],['🤾','handball'],['🏌️','golfer'],['🏇','horse racing'],
+    ['🧘','yoga meditation'],['🏄','surfer'],['🏊','swimmer'],['🤽','water polo'],
+    ['🚣','rowing'],['🧗','climbing'],['🚴','cycling'],['🚵','mountain biking'],
+    ['🎖️','military medal'],['🏆','trophy win first'],['🏅','sports medal'],['🥇','gold medal'],
+    ['🥈','silver medal'],['🥉','bronze medal'],['🎗️','reminder ribbon'],['🎫','ticket'],
+    ['🎟️','admission'],['🎪','circus tent'],['🤹','juggling'],['🎭','performing arts mask'],
+    ['🩰','ballet shoes'],['🎨','art palette'],['🎬','clapper board'],['🎤','microphone'],
+    ['🎧','headphones'],['🎼','musical score'],['🎹','piano keyboard'],['🥁','drum'],
+    ['🎷','sax'],['🎺','trumpet'],['🎸','guitar'],['🪕','banjo'],
+    ['🎻','violin'],['🪘','long drum'],['🎲','dice game'],['🧩','puzzle piece'],
+    ['♟️','chess pawn'],['🎯','bullseye target'],['🎳','bowling'],['🎮','video game'],
+    ['🎰','slot machine'],['🧸','teddy bear'],['🪅','pinata'],['🪆','nesting dolls'],
+  ],
+  travel: [
+    ['🚗','car'],['🚕','taxi'],['🚙','suv'],['🚌','bus'],['🚎','trolley'],
+    ['🏎️','race car f1'],['🚓','police car'],['🚑','ambulance'],['🚒','fire engine'],
+    ['🚐','minibus'],['🛻','pickup'],['🚚','delivery truck'],['🚛','articulated lorry'],
+    ['🚜','tractor'],['🏍️','motorcycle'],['🛵','moped'],['🦽','manual wheelchair'],
+    ['🦼','motor wheelchair'],['🛺','auto rickshaw'],['🚲','bike'],['🛴','kick scooter'],
+    ['🛹','skateboard'],['🛼','roller skate'],['🚏','bus stop'],['🛣️','motorway'],
+    ['🛤️','railway track'],['🛢️','oil drum'],['⛽','fuel pump'],['🚨','police light warning'],
+    ['🚥','horizontal traffic light'],['🚦','vertical traffic light'],['🛑','stop sign'],['🚧','construction'],
+    ['⚓','anchor'],['🛟','ring buoy'],['⛵','sailboat'],['🛶','canoe'],['🚤','speedboat'],
+    ['🛳️','passenger ship'],['⛴️','ferry'],['🛥️','motor boat'],['🚢','ship'],
+    ['✈️','plane'],['🛩️','small airplane'],['🛫','takeoff'],['🛬','landing'],
+    ['🪂','parachute'],['💺','seat'],['🚁','helicopter'],['🚟','suspension railway'],
+    ['🚠','mountain cableway'],['🚡','aerial tramway'],['🛰️','satellite'],['🚀','rocket launch moon'],
+    ['🛸','ufo'],['🛎️','bellhop'],['🧳','luggage'],['⌛','hourglass done'],
+    ['⏳','hourglass flowing'],['⌚','watch'],['⏰','alarm clock'],['🕰️','mantelpiece clock'],
+    ['🌡️','thermometer'],['🗺️','map'],['🧭','compass'],['🏔️','snowy mountain'],
+    ['⛰️','mountain'],['🌋','volcano'],['🗻','mt fuji'],['🏕️','camping'],
+    ['🏖️','beach umbrella'],['🏜️','desert'],['🏝️','desert island'],['🏞️','national park'],
+    ['🏟️','stadium'],['🏛️','classical building'],['🏗️','construction building'],['🧱','brick'],
+    ['🪨','rock'],['🪵','wood'],['🛖','hut'],['🏘️','houses'],
+    ['🏚️','derelict house'],['🏠','house home'],['🏡','house garden'],['🏢','office'],
+    ['🏣','japanese post'],['🏤','european post'],['🏥','hospital'],['🏦','bank'],
+    ['🏨','hotel'],['🏩','love hotel'],['🏪','convenience store'],['🏫','school'],
+    ['🏬','department store'],['🏭','factory'],['🏯','castle japanese'],['🏰','castle european'],
+    ['💒','wedding'],['🗼','tower'],['🗽','statue of liberty'],['⛪','church'],
+    ['🕌','mosque'],['🛕','hindu temple'],['🕍','synagogue'],['⛩️','shinto shrine'],
+    ['🕋','kaaba'],['⛲','fountain'],['⛺','tent'],['🌁','foggy'],
+    ['🌃','night with stars'],['🏙️','cityscape skyline'],['🌄','sunrise mountains'],['🌅','sunrise'],
+    ['🌆','cityscape dusk'],['🌇','sunset'],['🌉','bridge night'],['♨️','hot springs'],
+    ['🎠','carousel horse'],['🛝','playground slide'],['🎡','ferris wheel'],['🎢','roller coaster'],
+    ['💈','barber'],['🎪','circus'],
+  ],
+  objects: [
+    ['💡','bulb idea insight'],['🔦','flashlight'],['🕯️','candle'],['🪔','diya lamp'],
+    ['🧯','fire extinguisher'],['🛢️','oil drum'],['💸','money wings flying'],['💵','dollar usd'],
+    ['💴','yen'],['💶','euro'],['💷','pound'],['💰','money bag rich'],
+    ['💳','credit card'],['🪙','coin token crypto'],['💎','gem crystal diamond'],['⚖️','balance scales'],
+    ['🧰','toolbox'],['🪛','screwdriver'],['🔧','wrench'],['🔨','hammer'],
+    ['⚒️','hammer and pick'],['🛠️','hammer and wrench tools build'],['⛏️','pick mining'],
+    ['🪚','saw'],['🔩','nut bolt'],['⚙️','gear settings'],['🪤','mouse trap'],
+    ['🧱','brick'],['⛓️','chain link chains onchain'],['🧲','magnet'],['🔫','pistol'],
+    ['💣','bomb'],['🧨','firecracker dynamite'],['🪓','axe'],['🔪','knife'],
+    ['🗡️','dagger'],['⚔️','crossed swords'],['🛡️','shield'],['🚬','cigarette'],
+    ['⚰️','coffin'],['⚱️','urn'],['🏺','amphora'],['🔮','crystal ball predict'],
+    ['📿','prayer beads'],['🧿','evil eye'],['🪬','hamsa'],['💈','barber pole'],
+    ['⚗️','alembic lab'],['🔭','telescope'],['🔬','microscope'],['🕳️','hole'],
+    ['🩹','bandage'],['🩺','stethoscope'],['💊','pill'],['💉','syringe'],
+    ['🧬','dna'],['🦠','microbe virus'],['🧫','petri dish'],['🧪','test tube experiment'],
+    ['🌡️','thermometer'],['🧹','broom'],['🪠','plunger'],['🧺','basket'],
+    ['🧻','toilet paper'],['🚽','toilet'],['🚰','potable water'],['🚿','shower'],
+    ['🛁','bathtub'],['🪥','toothbrush'],['🧼','soap'],['🪒','razor'],
+    ['🧽','sponge'],['🪣','bucket'],['🧴','lotion'],['🛎️','bellhop'],
+    ['🔑','key'],['🗝️','old key'],['🚪','door'],['🪑','chair'],
+    ['🛋️','couch'],['🛏️','bed'],['🛌','in bed person'],['🧸','teddy'],
+    ['🪆','matryoshka'],['🖼️','framed picture'],['🪞','mirror'],['🪟','window'],
+    ['🛍️','shopping bag'],['🛒','shopping cart'],['🎁','gift present'],
+    ['🎈','balloon'],['🎏','carp streamer'],['🎀','ribbon'],['🎊','confetti ball party'],
+    ['🎉','party popper'],['🎎','dolls'],['🏮','red lantern'],['🎐','wind chime'],
+    ['🧧','red envelope'],['✉️','envelope mail'],['📩','envelope arrow'],['📨','incoming mail'],
+    ['📧','email'],['💌','love letter'],['📥','inbox'],['📤','outbox'],
+    ['📦','package'],['🏷️','tag'],['📪','mailbox'],['📫','mailbox flag up'],
+    ['📬','mailbox flag open'],['📭','mailbox flag down'],['📮','postbox'],
+    ['📯','postal horn'],['📜','scroll'],['📃','page curl'],['📄','page facing up'],
+    ['📑','bookmark tabs'],['🧾','receipt'],['📊','bar chart stats'],['📈','chart up pump growth'],
+    ['📉','chart down dump loss'],['🗒️','spiral notepad'],['🗓️','spiral calendar'],
+    ['📆','tear off calendar'],['📅','calendar'],['🗑️','wastebasket trash'],['📇','card index'],
+    ['🗃️','card file box'],['🗳️','ballot box vote'],['🗄️','file cabinet'],
+    ['📋','clipboard'],['📁','folder'],['📂','open folder'],['🗂️','card index dividers'],
+    ['🗞️','rolled newspaper'],['📰','newspaper'],['📓','notebook'],['📔','notebook decorative'],
+    ['📒','ledger'],['📕','red book closed'],['📗','green book'],['📘','blue book'],
+    ['📙','orange book'],['📚','books'],['📖','open book read'],['🔖','bookmark'],
+    ['🧷','safety pin'],['🔗','link'],['📎','paperclip'],['🖇️','linked paperclips'],
+    ['📐','ruler triangular'],['📏','straight ruler'],['🧮','abacus'],['📌','pushpin'],
+    ['📍','round pushpin'],['✂️','scissors'],['🖊️','pen'],['🖋️','fountain pen'],
+    ['✒️','nib pen'],['🖌️','paintbrush'],['🖍️','crayon'],['📝','memo note writing'],
+    ['✏️','pencil'],['🔍','magnifying glass left'],['🔎','magnifying glass right'],['🔏','lock with pen'],
+    ['🔐','lock with key secure'],['🔒','locked'],['🔓','unlocked'],
+    ['💻','laptop computer'],['🖥️','desktop computer'],['🖨️','printer'],['⌨️','keyboard'],
+    ['🖱️','mouse computer'],['🖲️','trackball'],['🕹️','joystick'],['💽','minidisc'],
+    ['💾','floppy disk save'],['💿','cd'],['📀','dvd'],['📱','mobile phone'],
+    ['📲','mobile arrow'],['☎️','phone'],['📞','phone receiver'],['📟','pager'],
+    ['📠','fax'],['📺','tv'],['📻','radio'],['🎙️','studio microphone'],
+    ['🎚️','level slider'],['🎛️','control knobs'],['🧭','compass'],['⏱️','stopwatch'],
+    ['⏲️','timer'],['⏰','alarm'],['🕰️','clock'],['⌛','hourglass done'],
+    ['⏳','hourglass flowing'],['📡','satellite dish broadcast'],
+  ],
+  symbols: [
+    ['❤️','red heart love'],['🧡','orange heart'],['💛','yellow heart'],['💚','green heart'],
+    ['💙','blue heart'],['💜','purple heart'],['🖤','black heart'],['🤍','white heart'],
+    ['🤎','brown heart'],['💔','broken heart'],['❣️','heart exclamation'],['💕','two hearts'],
+    ['💞','revolving hearts'],['💓','beating heart'],['💗','growing heart'],['💖','sparkling heart'],
+    ['💘','heart arrow'],['💝','heart ribbon'],['💟','heart decoration'],
+    ['☮️','peace symbol'],['✝️','latin cross'],['☪️','star crescent'],['🕉️','om'],
+    ['☸️','wheel dharma'],['✡️','star of david'],['🔯','6 pointed star'],['🕎','menorah'],
+    ['☯️','yin yang'],['☦️','orthodox cross'],['🛐','place of worship'],['⛎','ophiuchus'],
+    ['♈','aries'],['♉','taurus'],['♊','gemini'],['♋','cancer'],['♌','leo'],
+    ['♍','virgo'],['♎','libra'],['♏','scorpio'],['♐','sagittarius'],['♑','capricorn'],
+    ['♒','aquarius'],['♓','pisces'],['🆔','id'],['⚛️','atom science'],
+    ['🉑','accept'],['☢️','radioactive'],['☣️','biohazard'],['📴','mobile off'],
+    ['📳','vibration'],['🈶','japanese charge'],['🈚','japanese free'],['🈸','application'],
+    ['🈺','open for business'],['🈷️','monthly amount'],['✴️','eight pointed star'],
+    ['🆚','vs'],['💮','white flower stamp'],['🉐','bargain'],['㊙️','secret'],
+    ['㊗️','congrats'],['🈴','passing grade'],['🈵','no vacancy'],['🈹','discount'],
+    ['🈲','prohibited'],['🅰️','a button'],['🅱️','b button'],['🆎','ab'],['🆑','cl'],
+    ['🅾️','o button'],['🆘','sos emergency'],['❌','cross red x wrong'],['⭕','circle red'],
+    ['🛑','stop'],['⛔','no entry'],['📛','name badge'],['🚫','prohibited'],
+    ['💯','100 hundred'],['💢','anger'],['♨️','hot springs'],['🚷','no pedestrians'],
+    ['🚯','do not litter'],['🚳','no bikes'],['🚱','no drink'],['🔞','no 18'],
+    ['📵','no phones'],['🚭','no smoking'],['❗','exclamation red'],['❕','exclamation white'],
+    ['❓','question red'],['❔','question white'],['‼️','double exclamation'],['⁉️','exclamation question'],
+    ['🔅','dim'],['🔆','bright'],['〽️','part alternation'],['⚠️','warning caution'],
+    ['🚸','children crossing'],['🔱','trident'],['⚜️','fleur de lis'],['🔰','beginner'],
+    ['♻️','recycle'],['✅','check green tick correct done'],['🈯','reserved'],['💹','chart yen up'],
+    ['❇️','sparkle'],['✳️','asterisk 8'],['❎','negative square x'],['🌐','globe meridians'],
+    ['💠','diamond small'],['Ⓜ️','circled m'],['🌀','cyclone spiral'],['💤','zzz sleep'],
+    ['🏧','atm'],['🚾','water closet'],['♿','wheelchair'],['🅿️','parking'],
+    ['🛗','elevator'],['🈳','japanese vacancy'],['🛂','passport'],['🛃','customs'],
+    ['🛄','baggage'],['🛅','left luggage'],['🚹','men'],['🚺','women'],['🚼','baby change'],
+    ['🚻','restroom'],['🚮','litter'],['🎦','cinema'],['📶','signal bars wifi'],
+    ['🈁','here japanese'],['🔣','symbols'],['ℹ️','info i'],['🔤','latin letters'],
+    ['🔡','lowercase'],['🔠','uppercase'],['🆖','ng'],['🆗','ok'],['🆙','up level'],
+    ['🆒','cool'],['🆕','new'],['🆓','free'],
+    ['0️⃣','0'],['1️⃣','1'],['2️⃣','2'],['3️⃣','3'],['4️⃣','4'],
+    ['5️⃣','5'],['6️⃣','6'],['7️⃣','7'],['8️⃣','8'],['9️⃣','9'],['🔟','10'],
+    ['🔢','numbers'],['#️⃣','hash'],['*️⃣','asterisk'],['⏏️','eject'],
+    ['▶️','play'],['⏸️','pause'],['⏯️','play pause'],['⏹️','stop square'],['⏺️','record'],
+    ['⏭️','next track'],['⏮️','prev track'],['⏩','fast forward'],['⏪','rewind'],
+    ['⏫','fast up'],['⏬','fast down'],['◀️','reverse'],['🔼','up button'],['🔽','down button'],
+    ['➡️','right arrow'],['⬅️','left arrow'],['⬆️','up arrow'],['⬇️','down arrow'],
+    ['↗️','upright arrow'],['↘️','downright arrow'],['↙️','downleft arrow'],['↖️','upleft arrow'],
+    ['↕️','up down arrow'],['↔️','left right arrow'],['↪️','right curve'],['↩️','left curve'],
+    ['⤴️','up curve'],['⤵️','down curve'],['🔀','shuffle'],['🔁','repeat'],['🔂','repeat one'],
+    ['🔄','counterclockwise'],['🔃','clockwise'],['🎵','note'],['🎶','notes'],
+    ['➕','plus'],['➖','minus'],['➗','divide'],['✖️','multiply x'],['🟰','equals'],
+    ['♾️','infinity'],['💲','dollar sign'],['💱','currency exchange'],['™️','tm'],['©️','copyright'],
+    ['®️','registered'],['👁️‍🗨️','eye speech bubble'],['🔚','end'],['🔙','back'],['🔛','on'],
+    ['🔝','top'],['🔜','soon'],['〰️','wavy'],['➰','curly loop'],['➿','double curly'],
+    ['✔️','check'],['☑️','ballot check'],['🔘','radio button'],['🔴','red circle'],
+    ['🟠','orange circle'],['🟡','yellow circle'],['🟢','green circle'],['🔵','blue circle'],
+    ['🟣','purple circle'],['⚫','black circle'],['⚪','white circle'],['🟤','brown circle'],
+    ['🟥','red square'],['🟧','orange square'],['🟨','yellow square'],['🟩','green square'],
+    ['🟦','blue square'],['🟪','purple square'],['⬛','black square'],['⬜','white square'],
+    ['🟫','brown square'],['◼️','med black square'],['◻️','med white square'],
+    ['◾','small black'],['◽','small white'],['▪️','tiny black'],['▫️','tiny white'],
+    ['🔶','orange diamond'],['🔷','blue diamond'],['🔸','small orange diamond'],['🔹','small blue diamond'],
+    ['🔺','red triangle up'],['🔻','red triangle down'],['💮','flower stamp'],['🔲','black square button'],
+    ['🔳','white square button'],
+  ],
+};
+
+let currentEpCat = 'smileys';
+let emojiTargetId = null;
+
+/* ═════════════════════════════════════════════════════════════════
+   INIT
+   ═════════════════════════════════════════════════════════════════ */
+(async function init(){
+  renderEmojiTabs();
+  bindGlobalHandlers();
+  await loadTopics(/*seedIfEmpty*/true);
+  await loadNotes();
+  renderSidebar();
+  checkScheduler();
+})();
+
+async function loadTopics(seedIfEmpty = false) {
+  try {
+    topics = await api('GET', '/api/topics');
+    if (seedIfEmpty && topics.length === 0) {
+      await api('POST', '/api/seed');
+      topics = await api('GET', '/api/topics');
+    }
+  } catch (e) {
+    console.error(e);
+    toast('Failed to load topics: ' + e.message, 'error');
+  }
+}
+
+async function loadNotes() {
+  try {
+    notes = await api('GET', '/api/notes');
+  } catch (e) {
+    console.error(e);
+    toast('Failed to load notes: ' + e.message, 'error');
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════
+   SIDEBAR
+   ═════════════════════════════════════════════════════════════════ */
+const openTopics = new Set();
+
+function renderSidebar() {
+  const tree = document.getElementById('sbTree');
+
+  if (topics.length === 0 && notes.length === 0) {
+    tree.innerHTML = `
+      <div class="sb-empty">
+        <strong>No topics yet</strong>
+        Click the + above to create your first topic, or just start a new note and it'll land in <em>Unsorted</em>.
+      </div>`;
+    return;
+  }
+
+  // Group notes by topic
+  const notesByTopic = {};
+  for (const t of topics) notesByTopic[t.id] = [];
+  const unsorted = [];
+  for (const n of notes) {
+    if (n.topic_id && notesByTopic[n.topic_id]) notesByTopic[n.topic_id].push(n);
+    else unsorted.push(n);
+  }
+
+  let html = '';
+  for (const t of topics) {
+    const isOpen = openTopics.has(t.id);
+    const tNotes = notesByTopic[t.id] || [];
+    const isActive = currentTopicFilter === t.id;
+    html += `
+      <div class="topic-row ${isOpen?'open':''} ${isActive?'active':''}" onclick="toggleTopic('${t.id}')">
+        <span class="chev">▶</span>
+        <div class="icon" style="background:${t.color}22;color:${t.color}">${escapeHtml(t.icon || '#')}</div>
+        <span class="name">${escapeHtml(t.name)}</span>
+        <span class="count">${t.count}</span>
+        <button class="menu-btn" onclick="event.stopPropagation();openTopicContextMenu(event,'${t.id}')">⋯</button>
+      </div>`;
+    if (isOpen) {
+      html += '<div class="notes-group">';
+      if (tNotes.length === 0) {
+        html += `<div style="padding:6px 14px 6px 36px;font-size:10px;color:var(--text3);font-style:italic">No notes yet</div>`;
+      } else {
+        for (const n of tNotes) html += renderNoteRow(n);
+      }
+      html += '</div>';
+    }
+  }
+
+  // Unsorted
+  if (unsorted.length > 0) {
+    const unsortedOpen = openTopics.has('__unsorted__');
+    html += `
+      <div class="topic-row ${unsortedOpen?'open':''}" onclick="toggleTopic('__unsorted__')">
+        <span class="chev">▶</span>
+        <div class="icon" style="background:var(--surface3);color:var(--text3)">∅</div>
+        <span class="name" style="font-style:italic;color:var(--text2)">Unsorted</span>
+        <span class="count">${unsorted.length}</span>
+      </div>`;
+    if (unsortedOpen) {
+      html += '<div class="notes-group">';
+      for (const n of unsorted) html += renderNoteRow(n);
+      html += '</div>';
+    }
+  }
+
+  tree.innerHTML = html;
+}
+
+function renderNoteRow(n) {
+  const isActive = n.id === currentNoteId;
+  const catColor = CATEGORY_COLORS[n.category] || '#888';
+  const title = (n.title && n.title.trim()) || firstLine(n.text) || 'Untitled';
+  const isEmpty = !(n.title && n.title.trim()) && !firstLine(n.text);
+  return `
+    <div class="note-row ${isActive?'active':''}" onclick="openNote('${n.id}')">
+      <div class="cat-dot" style="background:${catColor}" title="${CATEGORY_LABELS[n.category]||n.category}"></div>
+      <span class="title ${isEmpty?'untitled':''}">${escapeHtml(title)}</span>
+      <span class="flags">
+        ${n.reply_text ? '🧵' : ''}
+        ${n.status==='published' ? '🟢' : ''}
+      </span>
+    </div>`;
+}
+
+function toggleTopic(id) {
+  if (openTopics.has(id)) openTopics.delete(id);
+  else openTopics.add(id);
+  renderSidebar();
+}
+
+function firstLine(s) {
+  if (!s) return '';
+  const line = s.split('\n').find(l => l.trim()) || '';
+  return line.length > 60 ? line.slice(0, 60) + '…' : line;
+}
+
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+function updateSidebarTitle() {
+  // Update the title in the sidebar without full re-render
+  if (!currentNoteId) return;
+  const n = notes.find(x => x.id === currentNoteId);
+  if (!n) return;
+  // Easier: just re-render sidebar, it's cheap
+  renderSidebar();
+}
+
+/* Topic context menu */
+function openTopicContextMenu(ev, tid) {
+  ev.preventDefault();
+  const ctx = document.getElementById('ctxMenu');
+  ctx.innerHTML = `
+    <button onclick="editTopic('${tid}')">✎ Edit topic</button>
+    <div class="divider"></div>
+    <button class="danger" onclick="confirmDeleteTopic('${tid}')">Delete topic…</button>
+  `;
+  ctx.style.left = ev.clientX + 'px';
+  ctx.style.top  = ev.clientY + 'px';
+  ctx.classList.add('open');
+}
+
+function closeContextMenu() {
+  document.getElementById('ctxMenu').classList.remove('open');
+}
+
+function bindGlobalHandlers() {
+  document.addEventListener('click', (e) => {
+    // Close emoji picker if clicking outside
+    const ep = document.getElementById('emojiPicker');
+    if (ep.classList.contains('open') && !ep.contains(e.target) && !e.target.closest('[onclick*="openEmojiPicker"]')) {
+      ep.classList.remove('open');
+    }
+    // Close ctx menu
+    const ctx = document.getElementById('ctxMenu');
+    if (ctx.classList.contains('open') && !ctx.contains(e.target)) ctx.classList.remove('open');
+  });
+  // Close modals on background click
+  const topicOv = document.getElementById('topicOverlay');
+  if (topicOv) {
+    topicOv.addEventListener('click', (e) => {
+      if (e.target.id === 'topicOverlay') e.target.classList.remove('open');
+    });
+  }
+  // ESC handler
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.getElementById('emojiPicker').classList.remove('open');
+      document.getElementById('ctxMenu').classList.remove('open');
+      document.getElementById('topicOverlay').classList.remove('open');
+    }
+    // Cmd/Ctrl+N: new note
+    if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
+      e.preventDefault();
+      newNote();
+    }
+  });
+}
+
+/* ═════════════════════════════════════════════════════════════════
+   TOPICS CRUD
+   ═════════════════════════════════════════════════════════════════ */
+function openTopicModal() {
+  editingTopicId = null;
+  document.getElementById('topicModalTitle').textContent = 'New Topic';
+  document.getElementById('tfName').value = '';
+  document.getElementById('tfIcon').value = '◆';
+  document.getElementById('topicDeleteBtn').classList.add('hidden');
+  renderColorPicker(TOPIC_COLOR_PALETTE[0]);
+  document.getElementById('topicOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('tfName').focus(), 30);
+}
+
+function editTopic(tid) {
+  closeContextMenu();
+  const t = topics.find(x => x.id === tid);
+  if (!t) return;
+  editingTopicId = tid;
+  document.getElementById('topicModalTitle').textContent = 'Edit Topic';
+  document.getElementById('tfName').value = t.name || '';
+  document.getElementById('tfIcon').value = t.icon || '◆';
+  document.getElementById('topicDeleteBtn').classList.remove('hidden');
+  renderColorPicker(t.color);
+  document.getElementById('topicOverlay').classList.add('open');
+}
+
+function closeTopicModal() {
+  document.getElementById('topicOverlay').classList.remove('open');
+}
+
+function renderColorPicker(selected) {
+  const row = document.getElementById('colorRow');
+  row.innerHTML = TOPIC_COLOR_PALETTE.map(c =>
+    `<div class="color-opt ${c===selected?'sel':''}" style="background:${c}" data-c="${c}" onclick="selectColor('${c}')"></div>`
+  ).join('');
+}
+
+let selectedColor = TOPIC_COLOR_PALETTE[0];
+function selectColor(c) {
+  selectedColor = c;
+  for (const el of document.querySelectorAll('.color-opt')) {
+    el.classList.toggle('sel', el.dataset.c === c);
+  }
+}
+
+async function saveTopic() {
+  const name  = document.getElementById('tfName').value.trim();
+  const icon  = document.getElementById('tfIcon').value.trim() || '◆';
+  if (!name) { toast('Give your topic a name','error'); return; }
+  const body = { name, icon, color: selectedColor };
+  try {
+    if (editingTopicId) await api('PUT', '/api/topics/' + editingTopicId, body);
+    else await api('POST', '/api/topics', body);
+    closeTopicModal();
+    await loadTopics();
+    renderSidebar();
+    renderTopicSelect();
+    toast(editingTopicId ? 'Topic updated' : 'Topic created', 'success');
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+function confirmDeleteTopic(tid) {
+  closeContextMenu();
+  editingTopicId = tid;
+  const t = topics.find(x => x.id === tid);
+  if (!t) return;
+  const keep = confirm(`Delete topic "${t.name}"?\n\nOK = delete topic, keep its notes (moved to Unsorted)\nCancel = don't delete`);
+  if (!keep) return;
+  deleteTopic(false);
+}
+
+async function deleteTopic(cascade = false) {
+  if (!editingTopicId) return;
+  try {
+    await fetch('/api/topics/' + editingTopicId + (cascade ? '?cascade=1' : ''), { method: 'DELETE' });
+    closeTopicModal();
+    await loadTopics();
+    await loadNotes();
+    renderSidebar();
+    renderTopicSelect();
+    toast('Topic deleted', 'success');
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+function renderTopicSelect() {
+  const sel = document.getElementById('fTopic');
+  const current = sel.value;
+  let html = '<option value="">— Unsorted —</option>';
+  for (const t of topics) {
+    html += `<option value="${t.id}">${escapeHtml(t.icon || '#')} ${escapeHtml(t.name)}</option>`;
+  }
+  sel.innerHTML = html;
+  if (current) sel.value = current;
+}
+
+/* ═════════════════════════════════════════════════════════════════
+   NOTES
+   ═════════════════════════════════════════════════════════════════ */
+async function newNote() {
+  try {
+    const topicId = currentTopicFilter || null;
+    const n = await api('POST', '/api/notes', {
+      topic_id: topicId,
+      title: '',
+      text: '',
+      category: 'update',
+    });
+    notes.unshift(n);
+    await loadTopics();  // update counts
+    if (topicId) openTopics.add(topicId);
+    else openTopics.add('__unsorted__');
+    renderSidebar();
+    openNote(n.id);
+  } catch (e) {
+    toast('Could not create note: ' + e.message, 'error');
+  }
+}
+
+async function openNote(id) {
+  // Flush any pending save on the current note first
+  if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; await flushSave(); }
+
+  currentNoteId = id;
+  const n = notes.find(x => x.id === id);
+  if (!n) {
+    // Maybe it was deleted; refresh
+    await loadNotes();
+    const n2 = notes.find(x => x.id === id);
+    if (!n2) return;
+    return populateEditor(n2);
+  }
+  populateEditor(n);
+  renderSidebar();
+}
+
+function populateEditor(n) {
+  document.getElementById('editor').classList.add('show');
+  document.getElementById('editorEmpty').classList.add('hidden');
+
+  renderTopicSelect();
+  document.getElementById('fTopic').value    = n.topic_id || '';
+  document.getElementById('fCategory').value = n.category || 'update';
+  document.getElementById('fTitle').value    = n.title || '';
+  document.getElementById('fText').value     = n.text || '';
+  document.getElementById('fReplyText').value = n.reply_text || '';
+  document.getElementById('fInternalNotes').value = n.notes_internal || '';
+  document.getElementById('fProject').value  = n.project || '';
+  document.getElementById('fStage').value    = n.stage || 'early';
+  document.getElementById('fLink').value     = n.link || '';
+
+  setStar(n.rating || 5, /*silent*/true);
+
+  updateCategoryChip();
+  updateStageChip();
+  updateGuideVisibility();
+  updateCharCount();
+  updateReplyCount();
+
+  // Show/hide reply
+  const hasReply = !!(n.reply_text && n.reply_text.length);
+  document.getElementById('replyWrap').classList.toggle('hidden', !hasReply);
+  document.getElementById('toggleThreadBtn').classList.toggle('hidden', hasReply);
+
+  // Meta line
+  const created = n.created_at ? new Date(n.created_at).toLocaleString() : '';
+  const updated = n.updated_at ? new Date(n.updated_at).toLocaleString() : '';
+  const isPublished = n.status === 'published';
+  const sentTag = isPublished ? `<span class="sent-badge">🟢 Published to scheduler</span>` : '';
+  document.getElementById('metaLine').innerHTML =
+    `${sentTag}<span>Created ${created}</span><span>·</span><span>Updated ${updated}</span>`;
+
+  // Status toggle + sync controls
+  const toggle  = document.getElementById('statusToggle');
+  const openBtn = document.getElementById('openInSchedBtn');
+  const resync  = document.getElementById('resyncBtn');
+  toggle.setAttribute('aria-checked', isPublished ? 'true' : 'false');
+  if (isPublished) {
+    openBtn.classList.remove('hidden');
+    resync.classList.remove('hidden');
+    const base = '/';
+    openBtn.href = base;
+  } else {
+    openBtn.classList.add('hidden');
+    resync.classList.add('hidden');
+    openBtn.removeAttribute('href');
+  }
+
+  // Auto-resize textareas to fit existing content
+  setTimeout(autoResizeAll, 0);
+}
+
+function updateCategoryChip() {
+  const cat = document.getElementById('fCategory').value;
+  const chip = document.getElementById('catChip');
+  chip.className = 'prop-chip cat-' + cat;
+  updateGuideVisibility();
+  // Also post label
+  const lbl = CATEGORY_LABELS[cat] || cat;
+  document.getElementById('postLabelMeta').textContent = lbl;
+}
+
+function updateStageChip() {
+  const stage = document.getElementById('fStage').value;
+  const chip = document.getElementById('stageChip');
+  chip.classList.remove('s-early','s-some-time','s-milking','s-tge-announced','s-tge-live');
+  chip.classList.add('s-' + stage);
+}
+
+function updateGuideVisibility() {
+  const cat = document.getElementById('fCategory').value;
+  const show = cat === 'guide';
+  for (const el of document.querySelectorAll('.guide-only')) {
+    el.classList.toggle('hidden', !show);
+  }
+}
+
+function setStar(n, silent=false) {
+  const row = document.getElementById('starRow');
+  [...row.children].forEach((el, i) => el.classList.toggle('sel', i < n));
+  if (!silent) onFieldChange('rating', n);
+}
+
+async function onTopicSelectChange(val) {
+  onFieldChange('topic_id', val || null);
+  // Flush save immediately so the server has the new topic_id
+  if (saveTimer) clearTimeout(saveTimer);
+  await flushSave();
+  // Now reload and re-render
+  await loadNotes();
+  await loadTopics();
+  renderSidebar();
+}
+
+function updateCharCount() {
+  const t = document.getElementById('fText').value;
+  const el = document.getElementById('charCount');
+  el.textContent = t.length + ' / 280';
+  el.className = 'char-count' + (t.length > 280 ? ' over' : (t.length > 260 ? ' warn' : ''));
+}
+
+function updateReplyCount() {
+  const t = document.getElementById('fReplyText').value;
+  const el = document.getElementById('replyCharCount');
+  el.textContent = t.length + ' / 280';
+  el.className = 'char-count' + (t.length > 280 ? ' over' : (t.length > 260 ? ' warn' : ''));
+}
+
+/* Auto-resize textarea to fit content */
+function autoResize(el) {
+  el.style.height = 'auto';
+  const minH = el.classList.contains('post-textarea') ? 200 : 60;
+  el.style.height = Math.max(el.scrollHeight, minH) + 'px';
+}
+function autoResizeAll() {
+  for (const id of ['fText','fReplyText','fInternalNotes']) {
+    const el = document.getElementById(id);
+    if (el) autoResize(el);
+  }
+}
+
+/* Field change → queue save */
+function onFieldChange(field, value) {
+  if (!currentNoteId) return;
+  const n = notes.find(x => x.id === currentNoteId);
+  if (!n) return;
+  n[field] = value;
+  queueSave();
+}
+
+let _pendingBody = null;
+function queueSave() {
+  if (!currentNoteId) return;
+  showSaveStatus('Saving…');
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(flushSave, 600);
+}
+
+async function flushSave() {
+  if (!currentNoteId) return;
+  const n = notes.find(x => x.id === currentNoteId);
+  if (!n) return;
+  try {
+    const body = {
+      topic_id:      n.topic_id,
+      title:         n.title || '',
+      text:          n.text || '',
+      reply_text:    n.reply_text || '',
+      category:      n.category || 'update',
+      project:       n.project || '',
+      rating:        n.rating,
+      stage:         n.stage || '',
+      link:          n.link || '',
+      outcome:       n.outcome || '',
+      notes_internal: n.notes_internal || '',
+    };
+    const updated = await api('PUT', '/api/notes/' + currentNoteId, body);
+    Object.assign(n, updated);
+    saveTimer = null;
+    showSaveStatus('Saved ' + new Date().toLocaleTimeString());
+  } catch (e) {
+    showSaveStatus('⚠ Save failed: ' + e.message);
+  }
+}
+
+function showSaveStatus(msg) {
+  const el = document.getElementById('saveStatus');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(showSaveStatus._t);
+  showSaveStatus._t = setTimeout(() => el.classList.remove('show'), 1600);
+}
+
+/* Thread reply toggles */
+function toggleThread() {
+  document.getElementById('replyWrap').classList.remove('hidden');
+  document.getElementById('toggleThreadBtn').classList.add('hidden');
+  setTimeout(() => document.getElementById('fReplyText').focus(), 50);
+}
+
+function removeThread() {
+  if (document.getElementById('fReplyText').value.trim()
+      && !confirm('Remove the thread reply? Its content will be cleared.')) return;
+  document.getElementById('fReplyText').value = '';
+  onFieldChange('reply_text', '');
+  document.getElementById('replyWrap').classList.add('hidden');
+  document.getElementById('toggleThreadBtn').classList.remove('hidden');
+  updateReplyCount();
+}
+
+async function duplicateCurrentNote() {
+  if (!currentNoteId) return;
+  if (saveTimer) { clearTimeout(saveTimer); await flushSave(); }
+  try {
+    const n = await api('POST', '/api/notes/' + currentNoteId + '/duplicate');
+    notes.unshift(n);
+    await loadTopics();
+    renderSidebar();
+    openNote(n.id);
+    toast('Duplicated', 'success');
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+async function deleteCurrentNote() {
+  if (!currentNoteId) return;
+  if (!confirm('Delete this note? This cannot be undone.')) return;
+  try {
+    await api('DELETE', '/api/notes/' + currentNoteId);
+    notes = notes.filter(x => x.id !== currentNoteId);
+    currentNoteId = null;
+    document.getElementById('editor').classList.remove('show');
+    document.getElementById('editorEmpty').classList.remove('hidden');
+    await loadTopics();
+    renderSidebar();
+    toast('Deleted');
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════
+   EMOJI PICKER
+   ═════════════════════════════════════════════════════════════════ */
+function renderEmojiTabs() {
+  const tabs = document.getElementById('epTabs');
+  tabs.innerHTML = EMOJI_CATEGORIES.map(c =>
+    `<button class="ep-tab ${c.id===currentEpCat?'active':''}" data-cat="${c.id}" onclick="setEmojiCat('${c.id}')" title="${c.label}">${c.icon}</button>`
+  ).join('');
+}
+
+function setEmojiCat(cat) {
+  currentEpCat = cat;
+  for (const el of document.querySelectorAll('.ep-tab')) {
+    el.classList.toggle('active', el.dataset.cat === cat);
+  }
+  document.getElementById('epSearch').value = '';
+  renderEmojiGrid();
+}
+
+function renderEmojiGrid() {
+  const q = document.getElementById('epSearch').value.trim().toLowerCase();
+  let items;
+  if (q) {
+    // Search across all categories
+    items = [];
+    for (const cat of EMOJI_CATEGORIES) {
+      for (const [e, name] of EMOJIS[cat.id]) {
+        if (name.includes(q) || e === q) items.push([e, name]);
+      }
+    }
+    items = items.slice(0, 120);
+  } else {
+    items = EMOJIS[currentEpCat] || [];
+  }
+  const grid = document.getElementById('epGrid');
+  if (items.length === 0) {
+    grid.innerHTML = `<div style="grid-column:1/-1;padding:20px;text-align:center;color:var(--text3);font-size:11px">No match</div>`;
+    return;
+  }
+  grid.innerHTML = items.map(([e, name]) =>
+    `<button class="ep-btn" title="${escapeHtml(name)}" onclick="insertEmoji('${e}')">${e}</button>`
+  ).join('');
+}
+
+function openEmojiPicker(targetId, ev) {
+  ev.stopPropagation();
+  emojiTargetId = targetId;
+  const ep = document.getElementById('emojiPicker');
+  const rect = ev.currentTarget.getBoundingClientRect();
+  const w = 340, h = 360;
+  let left = rect.left;
+  let top  = rect.bottom + 6;
+  if (left + w > window.innerWidth - 10) left = window.innerWidth - w - 10;
+  if (top + h > window.innerHeight - 10)  top  = rect.top - h - 6;
+  ep.style.left = Math.max(10, left) + 'px';
+  ep.style.top  = Math.max(10, top) + 'px';
+  ep.classList.add('open');
+  renderEmojiGrid();
+  setTimeout(() => document.getElementById('epSearch').focus(), 30);
+}
+
+function insertEmoji(e) {
+  const ta = document.getElementById(emojiTargetId);
+  if (!ta) return;
+  const s = ta.selectionStart, en = ta.selectionEnd;
+  const v = ta.value;
+  ta.value = v.slice(0, s) + e + v.slice(en);
+  ta.focus();
+  const pos = s + e.length;
+  ta.selectionStart = ta.selectionEnd = pos;
+  // Trigger field change
+  const field = ta.id === 'fText' ? 'text' : (ta.id === 'fReplyText' ? 'reply_text' : null);
+  if (field) {
+    onFieldChange(field, ta.value);
+    if (field === 'text') updateCharCount();
+    else updateReplyCount();
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════
+   SEARCH
+   ═════════════════════════════════════════════════════════════════ */
+function onSearch() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  if (!q) { renderSidebar(); return; }
+  // Filter notes by search query
+  const matching = notes.filter(n => {
+    const hay = [n.title, n.text, n.reply_text, n.project, n.notes_internal]
+      .filter(Boolean).join(' ').toLowerCase();
+    return hay.includes(q);
+  });
+  const tree = document.getElementById('sbTree');
+  if (matching.length === 0) {
+    tree.innerHTML = `<div class="sb-empty"><strong>No matches</strong>for "${escapeHtml(q)}"</div>`;
+    return;
+  }
+  let html = `<div style="padding:10px 14px 6px;font-size:10px;color:var(--text3);font-weight:700;letter-spacing:1px;text-transform:uppercase">Search: ${matching.length} result${matching.length===1?'':'s'}</div>`;
+  html += '<div class="notes-group" style="padding-left:0">';
+  for (const n of matching) {
+    const t = topics.find(t => t.id === n.topic_id);
+    const topicBadge = t ? `<span style="color:${t.color};font-size:9px;margin-right:4px">${escapeHtml(t.icon)} ${escapeHtml(t.name)}</span>` : '';
+    html += `
+      <div class="note-row ${n.id===currentNoteId?'active':''}" style="padding-left:14px" onclick="openNote('${n.id}')">
+        <div class="cat-dot" style="background:${CATEGORY_COLORS[n.category]||'#888'}"></div>
+        <span class="title">${topicBadge}${escapeHtml((n.title && n.title.trim()) || firstLine(n.text) || 'Untitled')}</span>
+        <span class="flags">${n.reply_text?'🧵':''}${n.status==='published'?'🟢':''}</span>
+      </div>`;
+  }
+  html += '</div>';
+  tree.innerHTML = html;
+}
+
+/* ═════════════════════════════════════════════════════════════════
+   SCHEDULER BRIDGE
+   ═════════════════════════════════════════════════════════════════ */
+async function checkScheduler() {
+  try {
+    const info = await api('GET', '/api/health');
+    schedulerInfo = { reachable: true, timezone: info.timezone };
+  } catch (e) {
+    schedulerInfo = { reachable: false };
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════
+   PUBLISH / UNPUBLISH (Draft ↔ Published toggle)
+   ═════════════════════════════════════════════════════════════════ */
+
+async function togglePublish() {
+  if (!currentNoteId) return;
+  const n = notes.find(x => x.id === currentNoteId);
+  if (!n) return;
+
+  if (n.status === 'published') {
+    // Published → Draft (destructive: deletes scheduler card)
+    const ok = confirm(
+      'Revert to draft?\n\nThis will DELETE the matching card from the scheduler. ' +
+      'The note itself stays here untouched.'
+    );
+    if (!ok) return;
+    await unpublishNote();
+  } else {
+    // Draft → Published
+    await publishNote();
+  }
+}
+
+async function publishNote() {
+  if (!currentNoteId) return;
+  // Make sure latest edits are persisted before we push them
+  if (saveTimer) { clearTimeout(saveTimer); await flushSave(); }
+
+  await checkScheduler();
+  if (!schedulerInfo.reachable) {
+    toast('Server error — try again', 'error');
+    return;
+  }
+
+  const toggle = document.getElementById('statusToggle');
+  toggle.classList.add('working');
+  try {
+    const res = await api('POST', '/api/notes/' + currentNoteId + '/publish');
+    const n = notes.find(x => x.id === currentNoteId);
+    if (n) {
+      n.status = 'published';
+      n.sent_post_id = res.post && res.post.id;
+    }
+    toast('✓ Pushed to scheduler — set the date and account there', 'success');
+    renderSidebar();
+    populateEditor(n);
+  } catch (e) {
+    toast('Publish failed: ' + e.message, 'error');
+  } finally {
+    toggle.classList.remove('working');
+  }
+}
+
+async function unpublishNote() {
+  if (!currentNoteId) return;
+  const toggle = document.getElementById('statusToggle');
+  toggle.classList.add('working');
+  try {
+    const res = await api('POST', '/api/notes/' + currentNoteId + '/unpublish');
+    const n = notes.find(x => x.id === currentNoteId);
+    if (n) {
+      n.status = 'draft';
+      n.sent_post_id = null;
+    }
+    if (res && res.warning) {
+      toast('Reverted locally — ' + res.warning, 'warning');
+    } else {
+      toast('Reverted to draft — scheduler card removed', 'success');
+    }
+    renderSidebar();
+    populateEditor(n);
+  } catch (e) {
+    toast('Unpublish failed: ' + e.message, 'error');
+  } finally {
+    toggle.classList.remove('working');
+  }
+}
+
+async function resyncToScheduler() {
+  if (!currentNoteId) return;
+  if (saveTimer) { clearTimeout(saveTimer); await flushSave(); }
+  const btn = document.getElementById('resyncBtn');
+  const original = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Syncing…';
+  try {
+    await api('POST', '/api/notes/' + currentNoteId + '/publish');
+    toast('✓ Re-synced to scheduler', 'success');
+  } catch (e) {
+    toast('Re-sync failed: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = original;
+  }
+}
+
+// Flush save before leaving the page
+window.addEventListener('beforeunload', () => {
+  if (saveTimer) {
+    clearTimeout(saveTimer);
+    // Best-effort synchronous-ish save
+    const n = notes.find(x => x.id === currentNoteId);
+    if (n) {
+      navigator.sendBeacon && navigator.sendBeacon(
+        '/api/notes/' + currentNoteId,
+        new Blob([JSON.stringify(n)], { type: 'application/json' })
+      );
+    }
+  }
+});
+</script>
+</body>
+</html>
