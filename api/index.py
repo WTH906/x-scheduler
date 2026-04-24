@@ -1,17 +1,18 @@
 """Vercel serverless entry point."""
 import sys, os, traceback
-# Add project root to path so imports work
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from flask import Flask, jsonify
+
+_startup_error = None
 try:
-    from app import app
+    import app as _app_module
+    app = _app_module.app
 except Exception:
-    # If the app fails to import, create a minimal Flask app that shows the error
-    from flask import Flask, jsonify
+    _startup_error = traceback.format_exc()
     app = Flask(__name__)
-    _err = traceback.format_exc()
 
     @app.route('/<path:_any>')
     @app.route('/')
     def error_page(_any=''):
-        return jsonify({'startup_error': _err}), 500
+        return jsonify({'startup_error': _startup_error}), 500
