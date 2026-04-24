@@ -3,10 +3,7 @@
   "builds": [
     {
       "src": "api/index.py",
-      "use": "@vercel/python",
-      "config": {
-        "includeFiles": "**/*.py,static/**,requirements.txt"
-      }
+      "use": "@vercel/python"
     }
   ],
   "rewrites": [

@@ -152,7 +152,6 @@ def init_db():
                 notes_internal TEXT DEFAULT '',
                 status         TEXT DEFAULT 'draft',
                 sent_post_id   TEXT,
-                tracking_id    TEXT,
                 created_at     TEXT,
                 updated_at     TEXT
             )''',
@@ -170,13 +169,16 @@ def init_db():
         ]
         for stmt in statements:
             cur.execute(stmt)
-        # Migrate: add tracking_id to notes if upgrading
+        conn.commit()  # Lock in all CREATE TABLEs before migration
+
+        # Migration: add tracking_id column if upgrading from pre-tracking schema.
+        # Runs in its own transaction so a rollback can't wipe the table creations above.
         try:
-            cur.execute("SELECT tracking_id FROM notes LIMIT 1")
-        except Exception:
-            conn.rollback()
             cur.execute("ALTER TABLE notes ADD COLUMN tracking_id TEXT")
-        conn.commit()
+            conn.commit()
+        except Exception:
+            conn.rollback()  # Column already exists — that's fine
+
         log.info("Database tables verified")
     except Exception:
         conn.rollback()
