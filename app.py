@@ -19,7 +19,9 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-app = Flask(__name__, static_folder='static')
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+app = Flask(__name__, static_folder=os.path.join(BASE_DIR, 'static'))
 app.secret_key = SECRET_KEY
 
 
@@ -87,11 +89,11 @@ def health():
 
 @app.route('/')
 def index():
-    return send_from_directory('static', 'scheduler.html')
+    return send_from_directory(os.path.join(BASE_DIR, 'static'), 'scheduler.html')
 
 @app.route('/notes')
 def notes_page():
-    return send_from_directory('static', 'notes.html')
+    return send_from_directory(os.path.join(BASE_DIR, 'static'), 'notes.html')
 
 
 # ─── DB INIT ON COLD START ──────────────────────────────────────────────────
