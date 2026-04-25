@@ -165,8 +165,18 @@ def init_db():
                 interacted     BOOLEAN DEFAULT FALSE,
                 quick_notes    TEXT DEFAULT '',
                 last_interacted TEXT DEFAULT '',
+                phase_id       TEXT,
+                details        TEXT DEFAULT '',
                 created_at     TEXT,
                 updated_at     TEXT
+            )''',
+            # ── Tracking phases table (shared list of phase labels) ──
+            '''CREATE TABLE IF NOT EXISTS tracking_phases (
+                id             TEXT PRIMARY KEY,
+                name           TEXT NOT NULL DEFAULT '',
+                color          TEXT DEFAULT '#7c6fff',
+                order_index    INTEGER DEFAULT 0,
+                created_at     TEXT
             )''',
         ]
         for stmt in statements:
@@ -184,6 +194,20 @@ def init_db():
         # Migration: add last_interacted column to tracking (for upgraders)
         try:
             cur.execute("ALTER TABLE tracking ADD COLUMN last_interacted TEXT DEFAULT ''")
+            conn.commit()
+        except Exception:
+            conn.rollback()  # Column already exists — that's fine
+
+        # Migration: add phase_id column to tracking (for upgraders)
+        try:
+            cur.execute("ALTER TABLE tracking ADD COLUMN phase_id TEXT")
+            conn.commit()
+        except Exception:
+            conn.rollback()  # Column already exists — that's fine
+
+        # Migration: add details column to tracking (for upgraders)
+        try:
+            cur.execute("ALTER TABLE tracking ADD COLUMN details TEXT DEFAULT ''")
             conn.commit()
         except Exception:
             conn.rollback()  # Column already exists — that's fine

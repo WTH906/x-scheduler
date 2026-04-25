@@ -45,6 +45,8 @@ select option{background:var(--surface2);color:var(--text);padding:4px 8px}
 .sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
 .sb-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border)}
 .sb-title{font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px}
+.sb-title .sb-unsched{display:inline-block;margin-left:8px;padding:1px 6px;border-radius:8px;background:var(--surface3);color:var(--text2);font-size:10px;font-weight:700;letter-spacing:.5px;border:1px solid var(--border2);vertical-align:middle}
+.sb-title .sb-unsched.zero{opacity:.4}
 .sb-add{width:24px;height:24px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1;transition:all .15s;padding:0}
 .sb-add:hover{border-color:var(--accent);color:var(--accent);background:var(--surface2)}
 
@@ -267,10 +269,11 @@ select option{background:var(--surface2);color:var(--text);padding:4px 8px}
 .tp-table-wrap{flex:1;overflow-y:auto}
 .tp-table{width:100%;border-collapse:collapse}
 .tp-table thead th{font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border2);position:sticky;top:0;background:var(--bg)}
-.tp-col-project{width:24%}
-.tp-col-check{width:12%;text-align:center!important}
-.tp-col-date{width:14%}
-.tp-col-notes{width:30%}
+.tp-col-project{width:20%}
+.tp-col-phase{width:14%}
+.tp-col-check{width:10%;text-align:center!important}
+.tp-col-date{width:13%}
+.tp-col-notes{width:25%}
 .tp-col-actions{width:8%}
 .tp-table tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
 .tp-table tbody tr:hover{background:var(--surface)}
@@ -289,6 +292,52 @@ select option{background:var(--surface2);color:var(--text);padding:4px 8px}
 .tp-table .tp-delete{background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:4px 8px;border-radius:4px;transition:all .1s}
 .tp-table .tp-delete:hover{color:var(--failed);background:var(--surface2)}
 .tp-empty{text-align:center;padding:40px;color:var(--text3);font-size:13px}
+
+/* Phase dropdown in tracking row */
+.tp-table .tp-phase-select{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 28px 4px 10px;color:var(--text);font-family:'Syne',sans-serif;font-size:12px;font-weight:600;outline:none;cursor:pointer;transition:border-color .15s;color-scheme:dark;min-width:110px;max-width:100%;appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg, transparent 50%, var(--text3) 50%), linear-gradient(135deg, var(--text3) 50%, transparent 50%);background-position:calc(100% - 14px) 50%, calc(100% - 9px) 50%;background-size:5px 5px, 5px 5px;background-repeat:no-repeat}
+.tp-table .tp-phase-select:hover{border-color:var(--border2)}
+.tp-table .tp-phase-select:focus{border-color:var(--accent)}
+.tp-table .tp-phase-chip{display:inline-block;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:700;letter-spacing:.3px;border:1px solid;background:transparent;cursor:pointer;font-family:'Syne',sans-serif;transition:all .15s;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tp-table .tp-phase-chip.empty{color:var(--text3);border-color:var(--border)}
+.tp-table .tp-phase-chip.empty:hover{border-color:var(--border2);color:var(--text2)}
+
+/* Kebab (3-dot) menu */
+.tp-table .tp-kebab{background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:4px 10px;border-radius:4px;line-height:1;transition:all .1s}
+.tp-table .tp-kebab:hover{color:var(--text);background:var(--surface2)}
+.tp-actions-cell{position:relative;text-align:right;white-space:nowrap}
+.tp-actions-cell .tp-actions-row{display:inline-flex;align-items:center;gap:2px}
+
+/* Kebab popover */
+.tp-popover{position:absolute;right:8px;top:100%;margin-top:4px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.4);z-index:100;min-width:160px;overflow:hidden}
+.tp-popover button{display:flex;align-items:center;gap:8px;width:100%;background:transparent;border:none;color:var(--text);padding:9px 14px;text-align:left;cursor:pointer;font-family:'Syne',sans-serif;font-size:12px;transition:background .1s}
+.tp-popover button:hover{background:var(--surface3)}
+.tp-popover button.danger{color:var(--failed)}
+.tp-popover button.danger:hover{background:rgba(239,68,68,.1)}
+.tp-popover .sep{height:1px;background:var(--border);margin:2px 0}
+
+/* Details modal */
+.details-modal{max-width:560px}
+.details-modal h3{margin-bottom:6px}
+.details-modal .details-project{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;font-weight:800}
+.details-modal textarea{width:100%;min-height:240px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'Syne',sans-serif;font-size:13px;line-height:1.5;outline:none;resize:vertical;transition:border-color .15s}
+.details-modal textarea:focus{border-color:var(--accent)}
+
+/* Phase manager modal */
+.phases-modal{max-width:520px}
+.phases-list{margin:14px 0;display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto}
+.phases-list .phase-row{display:flex;align-items:center;gap:8px;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px}
+.phases-list .phase-row input[type=text]{flex:1;background:transparent;border:1px solid transparent;border-radius:6px;padding:5px 8px;color:var(--text);font-family:'Syne',sans-serif;font-size:12px;outline:none;transition:border-color .15s;font-weight:600}
+.phases-list .phase-row input[type=text]:focus{border-color:var(--border2);background:var(--surface)}
+.phases-list .phase-row input[type=color]{width:32px;height:28px;border:1px solid var(--border);border-radius:6px;background:transparent;cursor:pointer;padding:0}
+.phases-list .phase-row .ph-del{background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:4px 8px;border-radius:4px}
+.phases-list .phase-row .ph-del:hover{color:var(--failed);background:var(--surface3)}
+.phases-add-row{display:flex;gap:8px;align-items:center;padding:10px;background:var(--surface);border:1px dashed var(--border2);border-radius:8px}
+.phases-add-row input[type=text]{flex:1;background:transparent;border:none;color:var(--text);font-family:'Syne',sans-serif;font-size:12px;outline:none;font-weight:600;padding:5px 8px}
+.phases-add-row input[type=text]::placeholder{color:var(--text3)}
+.phases-add-row input[type=color]{width:32px;height:28px;border:1px solid var(--border);border-radius:6px;background:transparent;cursor:pointer;padding:0}
+.phases-add-row button{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer}
+.phases-add-row button:disabled{opacity:.5;cursor:not-allowed}
+.phases-empty{text-align:center;padding:24px;color:var(--text3);font-size:12px;font-style:italic}
 </style>
 </head>
 <body>
@@ -313,7 +362,7 @@ select option{background:var(--surface2);color:var(--text);padding:4px 8px}
   <!-- ─── SIDEBAR ─── -->
   <aside class="sidebar">
     <div class="sb-head">
-      <span class="sb-title">Topics</span>
+      <span class="sb-title" id="sbTitle">Topics</span>
       <button class="sb-add" onclick="openTopicModal()" title="New topic">+</button>
     </div>
     <div class="sb-tree" id="sbTree"></div>
@@ -448,6 +497,7 @@ select option{background:var(--surface2);color:var(--text);padding:4px 8px}
         <thead>
           <tr>
             <th class="tp-col-project">Project</th>
+            <th class="tp-col-phase">Phase</th>
             <th class="tp-col-check">Posted about</th>
             <th class="tp-col-check">Interacted</th>
             <th class="tp-col-date">Last interacted</th>
@@ -516,6 +566,37 @@ select option{background:var(--surface2);color:var(--text);padding:4px 8px}
   </div>
 </div>
 
+<!-- ─── DETAILS MODAL (per-tracking-row long notes) ─── -->
+<div class="overlay" id="detailsOverlay" onclick="if(event.target===this)closeDetailsModal()">
+  <div class="modal details-modal">
+    <div class="details-project" id="detailsProjectName">Project</div>
+    <h3>Details</h3>
+    <div class="sub">Longer notes about this project — your positioning, history, anything you want to remember.</div>
+    <textarea id="detailsTextarea" placeholder="e.g. Was in season 1 airdrop, holding 2k tokens since TGE, founder is X (ex-Y)…"></textarea>
+    <div class="modal-actions">
+      <button onclick="closeDetailsModal()">Cancel</button>
+      <button class="primary" onclick="saveDetailsModal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── PHASES MANAGER MODAL ─── -->
+<div class="overlay" id="phasesOverlay" onclick="if(event.target===this)closePhasesModal()">
+  <div class="modal phases-modal">
+    <h3>Manage phases</h3>
+    <div class="sub">Phases describe where you stand on a project — e.g. <strong>Waitlist</strong>, <strong>TGE done</strong>, <strong>Cooked</strong>. Used across all tracking rows.</div>
+    <div class="phases-list" id="phasesList"></div>
+    <div class="phases-add-row">
+      <input type="color" id="newPhaseColor" value="#7c6fff" title="Color">
+      <input type="text" id="newPhaseName" placeholder="New phase name…" onkeydown="if(event.key==='Enter')addPhaseFromModal()">
+      <button onclick="addPhaseFromModal()">+ Add</button>
+    </div>
+    <div class="modal-actions">
+      <button class="primary" onclick="closePhasesModal()">Done</button>
+    </div>
+  </div>
+</div>
+
 <!-- Context menu for topics -->
 <div class="ctx" id="ctxMenu"></div>
 
@@ -528,6 +609,9 @@ select option{background:var(--surface2);color:var(--text);padding:4px 8px}
    ═════════════════════════════════════════════════════════════════ */
 let topics = [], notes = [];
 let trackingRows = [];
+let phases = [];                    // Shared phase dropdown list
+let detailsModalTid = null;         // Tracking ID currently open in details modal
+let kebabOpenTid = null;            // Currently open kebab popover
 let trackingViewActive = false;
 let currentNoteId = null;
 let currentTopicFilter = null;  // null = show all
@@ -921,6 +1005,7 @@ let emojiTargetId = null;
   await loadTopics(/*seedIfEmpty*/true);
   await loadNotes();
   await loadTracking();
+  await loadPhases();
   renderSidebar();
   checkScheduler();
 })();
@@ -954,6 +1039,14 @@ const openTopics = new Set();
 
 function renderSidebar() {
   const tree = document.getElementById('sbTree');
+
+  // Update unscheduled count beside the "Topics" title
+  // Unscheduled = notes that haven't been published yet (status === 'draft')
+  const titleEl = document.getElementById('sbTitle');
+  if (titleEl) {
+    const unschedCount = notes.filter(n => (n.status || 'draft') === 'draft').length;
+    titleEl.innerHTML = `Topics <span class="sb-unsched${unschedCount === 0 ? ' zero' : ''}" title="${unschedCount} unscheduled note${unschedCount === 1 ? '' : 's'}">${unschedCount}</span>`;
+  }
 
   if (topics.length === 0 && notes.length === 0) {
     tree.innerHTML = `
@@ -1729,6 +1822,174 @@ async function loadTracking() {
   }
 }
 
+async function loadPhases() {
+  try {
+    phases = await api('GET', '/api/tracking-phases');
+  } catch (e) {
+    console.error('Failed to load phases:', e);
+    phases = [];
+  }
+}
+
+// ── Phase dropdown change ───────────────────────────────────────────────────
+async function onPhaseChange(tid, value) {
+  // Special "manage" option opens the manager instead of setting a phase
+  if (value === '__manage__') {
+    // Reset the select to the previous value
+    const t = trackingRows.find(x => x.id === tid);
+    const sel = document.querySelector(`tr[data-tid="${tid}"] .tp-phase-select`);
+    if (sel) sel.value = t?.phase_id || '';
+    openPhasesModal();
+    return;
+  }
+  const phase_id = value || null;
+  const t = trackingRows.find(x => x.id === tid);
+  if (t) t.phase_id = phase_id;
+  renderTracking();
+  try {
+    await api('PUT', '/api/tracking/' + tid, { phase_id });
+  } catch (e) {
+    toast('Failed to update phase: ' + e.message, 'error');
+  }
+}
+
+// ── Kebab popover (3-dot menu per row) ─────────────────────────────────────
+function openTrackingKebab(ev, tid) {
+  ev.stopPropagation();
+  // If already open for this row, close it
+  if (kebabOpenTid === tid) { closeTrackingKebab(); return; }
+  closeTrackingKebab();
+  kebabOpenTid = tid;
+
+  const cell = ev.currentTarget.closest('.tp-actions-cell');
+  if (!cell) return;
+  const pop = document.createElement('div');
+  pop.className = 'tp-popover';
+  pop.id = 'tpKebabPopover';
+  pop.innerHTML = `
+    <button onclick="openDetailsModal('${tid}')">📝 Details</button>
+    <div class="sep"></div>
+    <button class="danger" onclick="deleteTrackingRow('${tid}')">🗑 Delete</button>
+  `;
+  cell.appendChild(pop);
+
+  // Close on outside click (next tick so this click doesn't immediately close it)
+  setTimeout(() => {
+    document.addEventListener('click', closeTrackingKebab, { once: true });
+  }, 0);
+}
+function closeTrackingKebab() {
+  const pop = document.getElementById('tpKebabPopover');
+  if (pop) pop.remove();
+  kebabOpenTid = null;
+}
+
+// ── Details modal ───────────────────────────────────────────────────────────
+function openDetailsModal(tid) {
+  closeTrackingKebab();
+  const t = trackingRows.find(x => x.id === tid);
+  if (!t) return;
+  detailsModalTid = tid;
+  document.getElementById('detailsProjectName').textContent = t.project || 'Untitled';
+  document.getElementById('detailsTextarea').value = t.details || '';
+  document.getElementById('detailsOverlay').classList.add('open');
+  // Focus the textarea after the overlay shows
+  setTimeout(() => document.getElementById('detailsTextarea').focus(), 50);
+}
+function closeDetailsModal() {
+  document.getElementById('detailsOverlay').classList.remove('open');
+  detailsModalTid = null;
+}
+async function saveDetailsModal() {
+  if (!detailsModalTid) return;
+  const tid = detailsModalTid;
+  const value = document.getElementById('detailsTextarea').value;
+  const t = trackingRows.find(x => x.id === tid);
+  if (t) t.details = value;
+  closeDetailsModal();
+  try {
+    await api('PUT', '/api/tracking/' + tid, { details: value });
+    toast('Details saved', 'ok');
+  } catch (e) {
+    toast('Failed to save details: ' + e.message, 'error');
+  }
+}
+
+// ── Phases manager modal ────────────────────────────────────────────────────
+function openPhasesModal() {
+  renderPhasesModal();
+  document.getElementById('phasesOverlay').classList.add('open');
+}
+function closePhasesModal() {
+  document.getElementById('phasesOverlay').classList.remove('open');
+}
+function renderPhasesModal() {
+  const list = document.getElementById('phasesList');
+  if (phases.length === 0) {
+    list.innerHTML = `<div class="phases-empty">No phases yet. Add your first one below — e.g. <strong>Waitlist</strong>, <strong>TGE done</strong>.</div>`;
+  } else {
+    list.innerHTML = phases.map(p => `
+      <div class="phase-row" data-pid="${p.id}">
+        <input type="color" value="${escapeHtml(p.color || '#7c6fff')}"
+               onchange="updatePhaseField('${p.id}','color',this.value)">
+        <input type="text" value="${escapeHtml(p.name)}"
+               onchange="updatePhaseField('${p.id}','name',this.value)">
+        <button class="ph-del" onclick="deletePhase('${p.id}')" title="Delete phase">✕</button>
+      </div>
+    `).join('');
+  }
+  // Reset the add row
+  document.getElementById('newPhaseName').value = '';
+  document.getElementById('newPhaseColor').value = '#7c6fff';
+}
+
+async function addPhaseFromModal() {
+  const nameEl = document.getElementById('newPhaseName');
+  const colorEl = document.getElementById('newPhaseColor');
+  const name = nameEl.value.trim();
+  if (!name) { nameEl.focus(); return; }
+  try {
+    const row = await api('POST', '/api/tracking-phases', { name, color: colorEl.value });
+    phases.push(row);
+    renderPhasesModal();
+    renderTracking();  // refresh dropdowns in the table
+  } catch (e) {
+    toast('Failed to create phase: ' + e.message, 'error');
+  }
+}
+
+let phaseFieldTimers = {};
+async function updatePhaseField(pid, field, value) {
+  const p = phases.find(x => x.id === pid);
+  if (p) p[field] = value;
+  // Debounce so typing into the name input doesn't fire a request per keystroke
+  clearTimeout(phaseFieldTimers[pid]);
+  phaseFieldTimers[pid] = setTimeout(async () => {
+    try {
+      await api('PUT', '/api/tracking-phases/' + pid, { [field]: value });
+      renderTracking();  // refresh chip colors / labels in the table
+    } catch (e) {
+      toast('Failed to update phase: ' + e.message, 'error');
+    }
+  }, 400);
+}
+
+async function deletePhase(pid) {
+  const p = phases.find(x => x.id === pid);
+  if (!p) return;
+  if (!confirm(`Delete phase "${p.name}"? Any tracking rows using it will be cleared.`)) return;
+  try {
+    await api('DELETE', '/api/tracking-phases/' + pid);
+    phases = phases.filter(x => x.id !== pid);
+    // Clear phase_id on any local tracking row that used it (server already did this)
+    trackingRows.forEach(r => { if (r.phase_id === pid) r.phase_id = null; });
+    renderPhasesModal();
+    renderTracking();
+  } catch (e) {
+    toast('Failed to delete phase: ' + e.message, 'error');
+  }
+}
+
 function toggleTrackingView() {
   trackingViewActive = !trackingViewActive;
   const btn     = document.getElementById('trackingTab');
@@ -1764,9 +2025,25 @@ function renderTracking() {
   tbody.innerHTML = trackingRows.map(t => {
     const postedClass = t.posted_about ? ' done' : '';
     const interClass  = t.interacted   ? ' done' : '';
+    const currentPhase = phases.find(p => p.id === t.phase_id);
+    // Build phase dropdown options (with "—" for none, all phases, then "Manage…")
+    const phaseOpts = [
+      `<option value="">— None —</option>`,
+      ...phases.map(p => `<option value="${p.id}" ${p.id === t.phase_id ? 'selected' : ''}>${escapeHtml(p.name)}</option>`),
+      `<option value="__manage__">⚙ Manage phases…</option>`
+    ].join('');
+    const phaseStyle = currentPhase
+      ? `color:${currentPhase.color};border-color:${currentPhase.color}66;background:${currentPhase.color}15`
+      : '';
     return `
       <tr data-tid="${t.id}">
         <td><span class="tp-project${postedClass && interClass ? ' done' : ''}">${escapeHtml(t.project || 'Untitled')}</span></td>
+        <td>
+          <select class="tp-phase-select" style="${phaseStyle}"
+                  onchange="onPhaseChange('${t.id}', this.value)">
+            ${phaseOpts}
+          </select>
+        </td>
         <td class="check-cell">
           <label class="tp-label${postedClass}">
             <input type="checkbox" ${t.posted_about ? 'checked' : ''} onchange="toggleTrackingCheck('${t.id}','posted_about',this.checked)">
@@ -1789,8 +2066,10 @@ function renderTracking() {
                  placeholder="Quick notes…"
                  oninput="debouncedTrackingUpdate('${t.id}','quick_notes',this.value)">
         </td>
-        <td>
-          <button class="tp-delete" onclick="deleteTrackingRow('${t.id}')" title="Delete">✕</button>
+        <td class="tp-actions-cell">
+          <div class="tp-actions-row">
+            <button class="tp-kebab" onclick="event.stopPropagation();openTrackingKebab(event,'${t.id}')" title="More">⋯</button>
+          </div>
         </td>
       </tr>`;
   }).join('');
