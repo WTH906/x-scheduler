@@ -164,6 +164,7 @@ def init_db():
                 posted_about   BOOLEAN DEFAULT FALSE,
                 interacted     BOOLEAN DEFAULT FALSE,
                 quick_notes    TEXT DEFAULT '',
+                last_interacted TEXT DEFAULT '',
                 created_at     TEXT,
                 updated_at     TEXT
             )''',
@@ -176,6 +177,13 @@ def init_db():
         # Runs in its own transaction so a rollback can't wipe the table creations above.
         try:
             cur.execute("ALTER TABLE notes ADD COLUMN tracking_id TEXT")
+            conn.commit()
+        except Exception:
+            conn.rollback()  # Column already exists — that's fine
+
+        # Migration: add last_interacted column to tracking (for upgraders)
+        try:
+            cur.execute("ALTER TABLE tracking ADD COLUMN last_interacted TEXT DEFAULT ''")
             conn.commit()
         except Exception:
             conn.rollback()  # Column already exists — that's fine

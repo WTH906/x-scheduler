@@ -267,9 +267,10 @@ select option{background:var(--surface2);color:var(--text);padding:4px 8px}
 .tp-table-wrap{flex:1;overflow-y:auto}
 .tp-table{width:100%;border-collapse:collapse}
 .tp-table thead th{font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:1px;padding:8px 12px;text-align:left;border-bottom:1px solid var(--border2);position:sticky;top:0;background:var(--bg)}
-.tp-col-project{width:30%}
-.tp-col-check{width:14%;text-align:center!important}
-.tp-col-notes{width:34%}
+.tp-col-project{width:24%}
+.tp-col-check{width:12%;text-align:center!important}
+.tp-col-date{width:14%}
+.tp-col-notes{width:30%}
 .tp-col-actions{width:8%}
 .tp-table tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
 .tp-table tbody tr:hover{background:var(--surface)}
@@ -282,6 +283,9 @@ select option{background:var(--surface2);color:var(--text);padding:4px 8px}
 .tp-table .tp-label.done{text-decoration:line-through;color:var(--text3)}
 .tp-table .tp-notes-input{width:100%;background:transparent;border:1px solid transparent;border-radius:6px;padding:4px 8px;color:var(--text2);font-family:'Syne',sans-serif;font-size:12px;outline:none;transition:border-color .15s}
 .tp-table .tp-notes-input:focus{border-color:var(--border2);background:var(--surface)}
+.tp-table .tp-date-input{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-family:'Syne',sans-serif;font-size:12px;outline:none;transition:border-color .15s;color-scheme:dark;min-width:130px}
+.tp-table .tp-date-input:focus{border-color:var(--accent)}
+.tp-table .tp-date-input:hover{border-color:var(--border2)}
 .tp-table .tp-delete{background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:4px 8px;border-radius:4px;transition:all .1s}
 .tp-table .tp-delete:hover{color:var(--failed);background:var(--surface2)}
 .tp-empty{text-align:center;padding:40px;color:var(--text3);font-size:13px}
@@ -446,6 +450,7 @@ select option{background:var(--surface2);color:var(--text);padding:4px 8px}
             <th class="tp-col-project">Project</th>
             <th class="tp-col-check">Posted about</th>
             <th class="tp-col-check">Interacted</th>
+            <th class="tp-col-date">Last interacted</th>
             <th class="tp-col-notes">Quick notes</th>
             <th class="tp-col-actions"></th>
           </tr>
@@ -1773,6 +1778,11 @@ function renderTracking() {
             <input type="checkbox" ${t.interacted ? 'checked' : ''} onchange="toggleTrackingCheck('${t.id}','interacted',this.checked)">
             Interacted
           </label>
+        </td>
+        <td>
+          <input type="date" class="tp-date-input"
+                 value="${escapeHtml(t.last_interacted || '')}"
+                 onchange="debouncedTrackingUpdate('${t.id}','last_interacted',this.value)">
         </td>
         <td>
           <input class="tp-notes-input" value="${escapeHtml(t.quick_notes || '')}"

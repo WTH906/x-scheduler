@@ -27,10 +27,11 @@ def api_create_tracking():
     with get_db() as conn:
         conn.execute(
             '''INSERT INTO tracking
-               (id, project, note_id, posted_about, interacted, quick_notes, created_at, updated_at)
-               VALUES (?,?,?,?,?,?,?,?)''',
+               (id, project, note_id, posted_about, interacted, quick_notes, last_interacted, created_at, updated_at)
+               VALUES (?,?,?,?,?,?,?,?,?)''',
             (tid, d.get('project', ''), d.get('note_id'),
-             False, False, d.get('quick_notes', ''), ts, ts)
+             False, False, d.get('quick_notes', ''),
+             d.get('last_interacted', ''), ts, ts)
         )
         conn.commit()
         row = conn.execute("SELECT * FROM tracking WHERE id=?", (tid,)).fetchone()
@@ -47,11 +48,12 @@ def api_update_tracking(tid):
         ex = dict(existing)
         conn.execute(
             '''UPDATE tracking SET project=?, posted_about=?, interacted=?,
-               quick_notes=?, updated_at=? WHERE id=?''',
+               quick_notes=?, last_interacted=?, updated_at=? WHERE id=?''',
             (d.get('project', ex['project']),
              d.get('posted_about', ex['posted_about']),
              d.get('interacted', ex['interacted']),
              d.get('quick_notes', ex['quick_notes']),
+             d.get('last_interacted', ex.get('last_interacted', '')),
              now_iso(), tid)
         )
         conn.commit()
