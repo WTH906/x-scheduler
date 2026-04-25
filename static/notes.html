@@ -1409,6 +1409,7 @@ async function flushSave() {
       link:          n.link || '',
       outcome:       n.outcome || '',
       notes_internal: n.notes_internal || '',
+      tracking_id:   n.tracking_id || null,
     };
     const updated = await api('PUT', '/api/notes/' + currentNoteId, body);
     Object.assign(n, updated);

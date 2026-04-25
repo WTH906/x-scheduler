@@ -152,6 +152,7 @@ def init_db():
                 notes_internal TEXT DEFAULT '',
                 status         TEXT DEFAULT 'draft',
                 sent_post_id   TEXT,
+                tracking_id    TEXT,
                 created_at     TEXT,
                 updated_at     TEXT
             )''',
