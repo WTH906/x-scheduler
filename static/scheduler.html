@@ -1090,9 +1090,26 @@ function exportXLSX(){
   XLSX.writeFile(wb,'guides-tracker.xlsx');
 }
 
+// ===== HANDLE ?post_id=... — opens that post in the edit modal =====
+function checkOpenPostParam() {
+  const p = new URLSearchParams(location.search);
+  const pid = p.get('post_id');
+  if (!pid) return;
+  // Clean the URL so refresh doesn't re-trigger the modal
+  history.replaceState({}, '', '/');
+  const post = posts.find(x => x.id === pid);
+  if (!post) {
+    showToast('That post was not found in the scheduler — it may have been deleted.', 'error');
+    return;
+  }
+  // Mirror what editPost() does, but driven by an arbitrary id rather than detailId.
+  detailId = pid;
+  editPost();
+}
+
 // ===== INIT =====
 loadData().then(()=>{
-  initStarTabs(); renderCalendar(); checkAuthParams();
+  initStarTabs(); renderCalendar(); checkAuthParams(); checkOpenPostParam();
   // Auto-refresh every 30s to pick up status changes
   setInterval(async()=>{ posts=await api('GET','/api/posts'); renderCalendar(); if(document.getElementById('view-queue').classList.contains('active')) renderQueue(); }, 30000);
 });
