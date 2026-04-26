@@ -338,6 +338,29 @@ select option{background:var(--surface2);color:var(--text);padding:4px 8px}
 .phases-add-row button{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer}
 .phases-add-row button:disabled{opacity:.5;cursor:not-allowed}
 .phases-empty{text-align:center;padding:24px;color:var(--text3);font-size:12px;font-style:italic}
+
+/* Emoji template picker dropdown */
+.tmpl-popover{position:fixed;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:500;min-width:180px;max-width:260px;overflow:hidden;padding:4px}
+.tmpl-popover .tmpl-item{display:block;width:100%;background:transparent;border:none;color:var(--text);padding:8px 12px;text-align:left;cursor:pointer;font-family:'Syne',sans-serif;font-size:16px;border-radius:6px;transition:background .1s;line-height:1.3}
+.tmpl-popover .tmpl-item:hover{background:var(--surface3)}
+.tmpl-popover .tmpl-empty{padding:12px;color:var(--text3);font-size:11px;font-style:italic;text-align:center}
+.tmpl-popover .tmpl-sep{height:1px;background:var(--border);margin:4px 0}
+.tmpl-popover .tmpl-manage{display:flex;align-items:center;gap:6px;width:100%;background:transparent;border:none;color:var(--text2);padding:8px 12px;text-align:left;cursor:pointer;font-family:'Syne',sans-serif;font-size:11px;border-radius:6px;transition:background .1s}
+.tmpl-popover .tmpl-manage:hover{background:var(--surface3);color:var(--text)}
+
+/* Emoji templates manager modal */
+.templates-modal{max-width:480px}
+.templates-list{margin:14px 0;display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto}
+.templates-list .tmpl-row{display:flex;align-items:center;gap:8px;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px}
+.templates-list .tmpl-row input[type=text]{flex:1;background:transparent;border:1px solid transparent;border-radius:6px;padding:6px 10px;color:var(--text);font-family:'Syne',sans-serif;font-size:16px;outline:none;transition:border-color .15s}
+.templates-list .tmpl-row input[type=text]:focus{border-color:var(--border2);background:var(--surface)}
+.templates-list .tmpl-row .tmpl-del{background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:4px 8px;border-radius:4px}
+.templates-list .tmpl-row .tmpl-del:hover{color:var(--failed);background:var(--surface3)}
+.templates-add-row{display:flex;gap:8px;align-items:center;padding:10px;background:var(--surface);border:1px dashed var(--border2);border-radius:8px}
+.templates-add-row input[type=text]{flex:1;background:transparent;border:none;color:var(--text);font-family:'Syne',sans-serif;font-size:16px;outline:none;padding:6px 10px}
+.templates-add-row input[type=text]::placeholder{color:var(--text3);font-size:12px}
+.templates-add-row button{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer}
+.templates-empty{text-align:center;padding:24px;color:var(--text3);font-size:12px;font-style:italic}
 </style>
 </head>
 <body>
@@ -441,6 +464,7 @@ select option{background:var(--surface2);color:var(--text);padding:4px 8px}
           <div class="post-footer">
             <div class="tools">
               <button class="tool-btn" onclick="openEmojiPicker('fText',event)">🙂 Emoji</button>
+              <button class="tool-btn" onclick="openTemplatePicker(event)" title="Insert an emoji combo template">📋 Templates</button>
               <button class="tool-btn" id="toggleThreadBtn" onclick="toggleThread()">🧵 Add reply</button>
             </div>
             <div class="char-count" id="charCount">0 / 280</div>
@@ -597,6 +621,22 @@ select option{background:var(--surface2);color:var(--text);padding:4px 8px}
   </div>
 </div>
 
+<!-- ─── EMOJI TEMPLATES MANAGER MODAL ─── -->
+<div class="overlay" id="templatesOverlay" onclick="if(event.target===this)closeTemplatesModal()">
+  <div class="modal templates-modal">
+    <h3>Manage emoji templates</h3>
+    <div class="sub">Emoji combos you use to tag the kind of post — e.g. <strong>❓💡</strong> for personal thinking, <strong>🚀✨</strong> for launches. Insert them at the cursor with one click.</div>
+    <div class="templates-list" id="templatesList"></div>
+    <div class="templates-add-row">
+      <input type="text" id="newTemplateCombo" placeholder="Paste a new combo… (e.g. ❓💡)" onkeydown="if(event.key==='Enter')addTemplateFromModal()">
+      <button onclick="addTemplateFromModal()">+ Add</button>
+    </div>
+    <div class="modal-actions">
+      <button class="primary" onclick="closeTemplatesModal()">Done</button>
+    </div>
+  </div>
+</div>
+
 <!-- Context menu for topics -->
 <div class="ctx" id="ctxMenu"></div>
 
@@ -612,6 +652,8 @@ let trackingRows = [];
 let phases = [];                    // Shared phase dropdown list
 let detailsModalTid = null;         // Tracking ID currently open in details modal
 let kebabOpenTid = null;            // Currently open kebab popover
+let emojiTemplates = [];            // Shared emoji combo templates
+let lastFocusedEditorField = 'fText'; // Tracks which textarea (fText / fReplyText) was last focused
 let trackingViewActive = false;
 let currentNoteId = null;
 let currentTopicFilter = null;  // null = show all
@@ -1006,6 +1048,7 @@ let emojiTargetId = null;
   await loadNotes();
   await loadTracking();
   await loadPhases();
+  await loadEmojiTemplates();
   renderSidebar();
   checkScheduler();
 })();
@@ -1182,6 +1225,17 @@ function bindGlobalHandlers() {
     // Close ctx menu
     const ctx = document.getElementById('ctxMenu');
     if (ctx.classList.contains('open') && !ctx.contains(e.target)) ctx.classList.remove('open');
+    // Close template popover
+    const tpop = document.getElementById('tmplPopover');
+    if (tpop && !tpop.contains(e.target) && !e.target.closest('[onclick*="openTemplatePicker"]')) {
+      tpop.remove();
+    }
+  });
+  // Track which editor textarea was last focused — used by template picker to know where to insert
+  document.addEventListener('focusin', (e) => {
+    if (e.target && (e.target.id === 'fText' || e.target.id === 'fReplyText')) {
+      lastFocusedEditorField = e.target.id;
+    }
   });
   // Close modals on background click
   const topicOv = document.getElementById('topicOverlay');
@@ -1389,6 +1443,8 @@ function populateEditor(n) {
   if (isPublished) {
     openBtn.classList.remove('hidden');
     resync.classList.remove('hidden');
+    // Pass the scheduler post id so the scheduler can open it directly in edit mode.
+    // Falls back to the dashboard root if no sent_post_id (shouldn't happen for published, but safe).
     openBtn.href = n.sent_post_id ? `/?post_id=${encodeURIComponent(n.sent_post_id)}` : '/';
   } else {
     openBtn.classList.add('hidden');
@@ -1827,6 +1883,136 @@ async function loadPhases() {
   } catch (e) {
     console.error('Failed to load phases:', e);
     phases = [];
+  }
+}
+
+async function loadEmojiTemplates() {
+  try {
+    emojiTemplates = await api('GET', '/api/emoji-templates');
+  } catch (e) {
+    console.error('Failed to load emoji templates:', e);
+    emojiTemplates = [];
+  }
+}
+
+// ── Emoji template picker (dropdown from toolbar button) ───────────────────
+function openTemplatePicker(ev) {
+  ev.stopPropagation();
+  // If already open, close it (toggle behaviour)
+  const existing = document.getElementById('tmplPopover');
+  if (existing) { existing.remove(); return; }
+
+  const btn = ev.currentTarget;
+  const rect = btn.getBoundingClientRect();
+  const pop = document.createElement('div');
+  pop.className = 'tmpl-popover';
+  pop.id = 'tmplPopover';
+
+  if (emojiTemplates.length === 0) {
+    pop.innerHTML = `
+      <div class="tmpl-empty">No templates yet</div>
+      <div class="tmpl-sep"></div>
+      <button class="tmpl-manage" onclick="openTemplatesModal()">⚙ Manage templates…</button>
+    `;
+  } else {
+    pop.innerHTML =
+      emojiTemplates.map(t =>
+        `<button class="tmpl-item" onclick="insertTemplate('${t.id}')">${escapeHtml(t.combo)}</button>`
+      ).join('') +
+      `<div class="tmpl-sep"></div>` +
+      `<button class="tmpl-manage" onclick="openTemplatesModal()">⚙ Manage templates…</button>`;
+  }
+  document.body.appendChild(pop);
+
+  // Position below the button — match emoji picker style
+  const w = pop.offsetWidth || 200;
+  let left = rect.left;
+  let top  = rect.bottom + 6;
+  if (left + w > window.innerWidth - 10) left = window.innerWidth - w - 10;
+  pop.style.left = Math.max(10, left) + 'px';
+  pop.style.top  = top + 'px';
+}
+
+function insertTemplate(tid) {
+  const t = emojiTemplates.find(x => x.id === tid);
+  if (!t) return;
+  // Prefer the last-focused field; fall back to fText
+  let targetId = lastFocusedEditorField || 'fText';
+  // If the reply field is hidden (no thread), force fText
+  const replyWrap = document.getElementById('replyWrap');
+  if (targetId === 'fReplyText' && replyWrap && replyWrap.classList.contains('hidden')) {
+    targetId = 'fText';
+  }
+  // Reuse the same insertion mechanism as the emoji picker
+  emojiTargetId = targetId;
+  insertEmoji(t.combo);
+  // Close the popover
+  const pop = document.getElementById('tmplPopover');
+  if (pop) pop.remove();
+}
+
+// ── Emoji templates manager modal ──────────────────────────────────────────
+function openTemplatesModal() {
+  const pop = document.getElementById('tmplPopover');
+  if (pop) pop.remove();
+  renderTemplatesModal();
+  document.getElementById('templatesOverlay').classList.add('open');
+}
+function closeTemplatesModal() {
+  document.getElementById('templatesOverlay').classList.remove('open');
+}
+function renderTemplatesModal() {
+  const list = document.getElementById('templatesList');
+  if (emojiTemplates.length === 0) {
+    list.innerHTML = `<div class="templates-empty">No templates yet. Add one below — e.g. <strong>❓💡</strong> for personal thinking, <strong>🚀✨</strong> for launches.</div>`;
+  } else {
+    list.innerHTML = emojiTemplates.map(t => `
+      <div class="tmpl-row" data-tid="${t.id}">
+        <input type="text" value="${escapeHtml(t.combo)}"
+               onchange="updateTemplate('${t.id}', this.value)">
+        <button class="tmpl-del" onclick="deleteTemplate('${t.id}')" title="Delete">✕</button>
+      </div>
+    `).join('');
+  }
+  document.getElementById('newTemplateCombo').value = '';
+}
+
+async function addTemplateFromModal() {
+  const inputEl = document.getElementById('newTemplateCombo');
+  const combo = inputEl.value.trim();
+  if (!combo) { inputEl.focus(); return; }
+  try {
+    const row = await api('POST', '/api/emoji-templates', { combo });
+    emojiTemplates.push(row);
+    renderTemplatesModal();
+  } catch (e) {
+    toast('Failed to create template: ' + e.message, 'error');
+  }
+}
+
+let templateFieldTimers = {};
+async function updateTemplate(tid, value) {
+  const v = (value || '').trim();
+  if (!v) return; // Don't push empty updates
+  const t = emojiTemplates.find(x => x.id === tid);
+  if (t) t.combo = v;
+  clearTimeout(templateFieldTimers[tid]);
+  templateFieldTimers[tid] = setTimeout(async () => {
+    try {
+      await api('PUT', '/api/emoji-templates/' + tid, { combo: v });
+    } catch (e) {
+      toast('Failed to update template: ' + e.message, 'error');
+    }
+  }, 400);
+}
+
+async function deleteTemplate(tid) {
+  try {
+    await api('DELETE', '/api/emoji-templates/' + tid);
+    emojiTemplates = emojiTemplates.filter(x => x.id !== tid);
+    renderTemplatesModal();
+  } catch (e) {
+    toast('Failed to delete template: ' + e.message, 'error');
   }
 }
 

@@ -46,6 +46,7 @@ from routes.guides   import bp as guides_bp
 from routes.topics   import bp as topics_bp
 from routes.notes    import bp as notes_bp
 from routes.tracking import bp as tracking_bp
+from routes.emoji_templates import bp as emoji_templates_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(accounts_bp)
@@ -54,6 +55,7 @@ app.register_blueprint(guides_bp)
 app.register_blueprint(topics_bp)
 app.register_blueprint(notes_bp)
 app.register_blueprint(tracking_bp)
+app.register_blueprint(emoji_templates_bp)
 
 
 # ─── CRON ENDPOINT ──────────────────────────────────────────────────────────

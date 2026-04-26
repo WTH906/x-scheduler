@@ -178,6 +178,13 @@ def init_db():
                 order_index    INTEGER DEFAULT 0,
                 created_at     TEXT
             )''',
+            # ── Emoji templates (shared list of quick-insert combos) ──
+            '''CREATE TABLE IF NOT EXISTS emoji_templates (
+                id             TEXT PRIMARY KEY,
+                combo          TEXT NOT NULL DEFAULT '',
+                order_index    INTEGER DEFAULT 0,
+                created_at     TEXT
+            )''',
         ]
         for stmt in statements:
             cur.execute(stmt)
