@@ -1389,8 +1389,7 @@ function populateEditor(n) {
   if (isPublished) {
     openBtn.classList.remove('hidden');
     resync.classList.remove('hidden');
-    const base = '/';
-    openBtn.href = base;
+    openBtn.href = n.sent_post_id ? `/?post_id=${encodeURIComponent(n.sent_post_id)}` : '/';
   } else {
     openBtn.classList.add('hidden');
     resync.classList.add('hidden');
