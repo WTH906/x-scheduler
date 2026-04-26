@@ -75,7 +75,7 @@ def api_update_post(pid):
             conn.execute(
                 '''UPDATE posts SET account_slot=?,type=?,text=?,reply_text=?,notes=?,
                    scheduled_time=?,recurring=?,project=?,rating=?,stage=?,
-                   status="pending",error_msg=NULL,retry_count=0,next_retry=NULL WHERE id=?''',
+                   status='pending',error_msg=NULL,retry_count=0,next_retry=NULL WHERE id=?''',
                 (d.get('account_slot',''), d.get('type','update'), d.get('text',''),
                  d.get('reply_text',''), d.get('notes',''), st,
                  d.get('recurring','none'), d.get('project',''),
